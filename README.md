@@ -1,8 +1,6 @@
-#SOURCE CODE OF BARCELONA'S iGEM WEB PAGE
-[Pues eso el codi de la web d'iGEM]
+# PRIVATE UPF-CRG BARCELONA iGEM REPOSITORY
 
 
-****
 ### To do
 * Many stuff
 * Kick bacteria ass
