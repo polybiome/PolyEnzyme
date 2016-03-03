@@ -1,0 +1,107 @@
+doctype html
+//if lt IE 7
+  html.no-js.lt-ie9.lt-ie8.lt-ie7(lang='')  
+//if IE 7
+  html.no-js.lt-ie9.lt-ie8(lang='')  
+//if IE 8
+  html.no-js.lt-ie9(lang='')  
+// [if gt IE 8] <!
+html.no-js(lang='')
+  // <![endif]
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    title
+    meta(name='description', content='')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='apple-touch-icon', href='apple-touch-icon.png')
+    link(href='https://fonts.googleapis.com/css?family=Amaranth:400,700' rel='stylesheet' type='text/css')
+    link(rel='stylesheet', href='css/bootstrap.min.css')
+    link(rel='stylesheet', href='css/bootstrap-theme.min.css')
+    link(rel='stylesheet', href='css/main.css')
+    script(src='js/vendor/modernizr-2.8.3-respond-1.4.2.min.js')
+  body
+    //if lt IE 8
+      p.browserupgrade
+        | You are using an 
+        strong outdated
+        |  browser. Please 
+        a(href='http://browsehappy.com/') upgrade your browser
+        |  to improve your experience.
+    .main
+      nav.navbar.navbar-default
+        .container-fluid
+          // Brand and toggle get grouped for better mobile display
+          .navbar-header
+            button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#bs-example-navbar-collapse-1', aria-expanded='false')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href='#')
+              img(src='img/icoMinimal.png').img-responsive
+          // Collect the nav links, forms, and other content for toggling
+          .navbar-collapse#bs-example-navbar-collapse-1.collapse
+            ul.nav.navbar-nav.navbar-right
+              li.active
+                a(href='#').first
+                  | Home 
+                  span.sr-only (current)
+              li
+                a(href='#') Faq
+              li
+                a(href='#') Igem Page
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown', role='button', aria-haspopup='true', aria-expanded='false')
+                  | Get in contact! 
+                  span.caret
+                ul.dropdown-menu
+                  li
+                    a(href='#') Our blog
+                  li
+                    a(href='#') The team
+                  li.divider(role='separator')
+                  li
+                    a(href='#') Support us!
+      .mainText
+        p PolyBiome is an initiative to reduce the cancerigenous potential of red and processed meats using safe microorganisms.
+        h1 LOREM IPSUM 
+          span SI AMET 
+    #sec1
+      .textSec
+        h2
+          span One 
+          |in every 33 
+          span cancers 
+          |is adscribed to processed or red meat. 
+        p Acording to the World Health Organitzation Lorem ipsum Mollit incididunt nostrud consectetur sit aute dolore proident in est culpa consectetur officia enim veniam minim laborum in sint minim Excepteur eu in ullamco minim sed ex culpa consequat ad nulla in pariatur veniam quis laborum amet Ut in do dolore in culpa dolor.
+      .imgSec
+        img(src='img/ribbon.png').img-responsive#ribbon
+        img(src='img/omsMeat.png').img-responsive#omsMeat
+      .textSec.spaced
+        p Lorem ipsum Eiusmod culpa exercitation deserunt labore Duis magna deserunt ex magna consequat do exercitation nostrud et in id tempor cupidatat eiusmod commodo dolor in ut sit laborum tempor Duis. Lorem ipsum Sint elit minim ea adipisicing officia tempor officia est mollit nostrud amet eu culpa consequat anim voluptate pariatur voluptate ad mollit.
+      .imgSec
+        img(src='img/cow.png').food
+        img(src='img/pig.png').food   
+        img(src='img/bacon.png').food
+        img(src='img/lamb.png').food
+    hr 
+    #sec2
+      .textSec
+        h2
+          span Lorem ipsum 
+          |Culpa Ut anim culpa ut magna.
+        p Commodo Duis qui magna Duis ex incididunt culpa anim pariatur ut deserunt cupidatat qui officia irure ut consequat anim dolore reprehenderit ullamco in labore laboris consequat Ut in dolor deserunt irure quis sit fugiat.
+    .tempDiv
+    script(script src="js/vendor/jquery-1.12.0.min.js")
+    script(src='js/vendor/bootstrap.min.js')
+    script(src="js/smooth-scroll.js")
+    script(src='js/main.js')
+    // Google Analytics: change UA-XXXXX-X to be your site's ID.
+    script.
+      (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+      function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+      e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+      e.src='//www.google-analytics.com/analytics.js';
+      r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+      ga('create','UA-XXXXX-X','auto');ga('send','pageview');
