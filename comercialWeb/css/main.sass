@@ -1,788 +1,248 @@
-@import 'mixins'
-@include font-face(EraserDust, '../fonts/EraserDust')
+@import compass
 
-.container
-	width: 100%
-	margin: 0px
-	padding: 0px
-.row
-	margin: 0px
-	padding: 0px
-body
-	padding: 0px
-	max-width: 100%
-	overflow-x: hidden
+.body
+	padding-top: 0px
 
-.navbar
-	background: rgba(255,255,255,0.4)
-	border: rgba(255,255,255,0.5)
-	transform : translate(0px,-50px)
-	transition: all 0.5s ease-in-out 1s
-	.logoNav img
-		position: absolute
-		left: 5%
-		height: 80%
-		margin-top: -10px
-
-.navbar-collapse
-	position: absolute
-	right: 20px
-
-.navbar-nav
-	height: 6%
-	background-color: rgba(255, 0, 0, 0)
-	font-family: 'Montserrat', sans-serif
-	font-weight: 600
-	text-shadow: 0px 7px 8px black
+.tempDiv
+	height: 2000px
 
 .navbar-default
-	.navbar-nav li a
-		color: black
-		font-size: 1.5em
-		margin-left: 3vw
-		margin-right: 0px
-		&:hover
-			background-color: rgba(255, 255, 255, 1)
-			color: #7AC943
-			transition: 0.2s all ease
-
-.navbarEffect
-	background-color: rgba(255, 255, 255, 1)
-	box-shadow: 0 0 10px black
-	padding-top: 0
-	transition: 0.5s all ease
-
-.mainViewport
-	//position: relative
-	height: 100vh
-	background:
-		image: url('../img/backPill.jpg')
-		size: cover
-		position: right
-		repeat: no-repeat
-.textViewport
-	top: 80vh
-	left: 40vw
-.next1
-	top: 180vh
-	left: 45vw
-.next2
-	top: 280vh
-	left: 47vw
-.next3
-	top: 80vh
-	left: 47vw
-.next4
-	top: 480vh
-	left: 47vw
-.next5
-	top: 580vh
-	left: 47vw
-	color: white
-.next6
-	top: 680vh
-	left: 47vw
-.logo
-	height: 110%
-	width: 50%
-	margin-left: 15%
-	//transform: translate(0px,-10%)
-	background:
-		image: url('../img/logoLetters.png')
-		position: left
-		size: 50%
-		repeat: no-repeat
-	.pill
-		height: 92%
-		width: 100%
-		margin-left: 12.5%
-		//transform: translate(0px,-10%)
-		background:
-			image: url('../img/logoPill.png')
-			position: left
-			size: 18%
-			repeat: no-repeat
-
-.textAbobePills
-	position: absolute
-	opacity: 0
-	z-index: 1
-	margin-left: 42%
-	top: 30%
-	font-size: 4em
-	text-shadow: 5px 4px 8px black
-	transition: 1.5s all ease-in-out 
-	span
-		color: #1ABA1F
-
-	hr
-		border: 0
-		margin-left: 50%
-		width: 0%
-		margin-top: 5px
-		height: 2px
-		background: #333
-		transition: all 1.5s ease-out
-
-.section1
-
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/white.png')
-		size: 100%
-		position: top left
-		repeat: no-repeat
-
-.bubble
-	background-color: #F2F2F2
-	border-radius: 5px
-	box-shadow: 0 0 6px #B2B2B2
-	display: inline-block
-	padding: 10px 18px
+	box-shadow: none
 	position: relative
-	vertical-align: top
-	float: right
-	&::before
-		background-color: #F2F2F2
-		content: "\00a0"
-		display: block
-		height: 16px
-		position: absolute
-		top: 11px
-		transform: rotate(29deg) skew(-35deg)
-		width: 20px
-		box-shadow: -2px 2px 2px 0 rgba(178, 178, 178, 0.4)
-		left: -9px
+	border: none
+	outline: 1px solid rgba(255,255,255,1)
+	outline-offset: 5px
+	border-radius: 0px
+	height: 150px
+	margin-bottom: 0px
+	background-image: none
+	background-color: rgba(255,255,255,0)
 
-.title1
-	position: relative
-	top: 20%
-	left: 50%
-	width: 30%
-	transform: translate(20%,0%)
-	transition: all 0.5s ease-in-out 0.5s
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 4em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-
-.whatItIs
-	opacity: 0
-	top: 30%
-	right: 10%
-	width: 50%
-	transition: all 1s ease-out 0.5s
-	p	
-		font-size: 1.5em
-		span
-			font-weight: bold
-
-.scienceGirlExplains
-	opacity: 0
-	position: relative
-	top: 35%
-	margin-left: 7%
-	width: 85%
-	height: 50%
-	transition: all 2s ease-out 1s
-	p
-		color: white
-		font:	
-			family: 'EraserDust'
-			size: 3vh
-
-.title3
-	position: absolute
-	transform: translate(300px,0px)
-	transition: all 1s ease-out 0.75s
-	margin-left: 15%
-	margin-top: 5%
-	color: white
-	text-align: center
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 4em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-
-.scienceGirl
-	position: relative
-	top: -80%
-	margin-right: 5%
-	height: 100%
-	width: 50%
-	float: right
-	background:
-		image: url('../img/scienceGirl2.png')
-		size: 50%
-		position: right
-		repeat: no-repeat
-	transform: translate(-500px, 0px)
-	transition: transform 1s ease-in-out
-
-a:focus
-	outline: 0
-
-ul
-	list-style-type: none
-
-.section2
-	overflow: hidden
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/back.jpg')
-		size: cover
-		position: center right
-		repeat: no-repeat
-		attachment: fixed
-
-.blackBoard
-	position: relative
-	height: 100%
-	width: 50%
-	margin-left: 2%
-	background:
-		image: url('../img/blackboard.png')
-		size: contain
-		position: left
-		repeat: no-repeat
-
-.section3
-	overflow: hidden
-	position: relative
-	width: 100%
-	height: 100vh
-
-.scienceGuy
-	height: 100%
-	width: 50%
-	float: left
-	left: 5%
-	transition: all 1s linear
-	background:
-		image: url('../img/scienceGuy3.png')
-		size: 30%
-		position: bottom left
-		repeat: no-repeat
-		attachment: fixed
-		repeat: no-repeat
-
-
-.sec3Inf
-	height: 100%	
-	width: 75%
-	float: left
-	margin-left: 5%	
-
-.scienceGuyExplains
-	position: relative
-	margin-top: 10%
-	left: 20%
-	width: 120%
-	opacity: 0
-	transition: all 1s ease-out 0.5s
-	p	
-		font-size: 1.5em
-		span
-			font-weight: bold
-
-
-.title2
-	position: relative
-	margin-top: 10%
-	width: 30%
-	transform: translate(-20%,0%)
-	transition: all 0.5s ease-in-out
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 3em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-
-.manyMeats
-	margin-top: 5%
-	margin-right: 5%
-	width: 80%
-	float: right
-	img
-		margin-bottom: 20px
-		opacity: 0
-		transform: translateX(30px)
-		transition: all 0.4s ease-in-out
-		overflow: hidden
-		cursor: pointer
-		&.is-showing
-			opacity: 1
-			transform: translateX(0px)
-
-.textNext
-	position: absolute
-	text-align: center
-	span
-		color: #333
-		margin-top: 10px
-		transition: all 0.5s ease-in-out
-		&:hover
-			color: #1ABA1F
-			transform: rotate(360deg)
-			transition: all 0.5s ease-in-out
-.section4
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/backFlip.jpg')
-		size: cover
-		position: center right
-		repeat: no-repeat
-		attachment: fixed
-.vessel
-	width: 100%
-	height: 100%
-	background:
-		image: url('../img/vessel.png')
-		size: cover
-		position: center right
-		repeat: no-repeat
-
-.title4
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 2em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-
-.scienceGuyExplains2
-	transform: translateX(200px)
-	position: relative
-	top: 40%
-	width: 40%
-	left: -30%
-	float: right
-	font-size: 2em
-	font-family: Amaranth, sans-serif
-	transition: all 1s ease-in-out
-	span
-		font-weight: bold
-
-.underConstruction
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/tempBack.jpg')
-		size: cover
-		position: center right
-		repeat: no-repeat
-		attachment: fixed
-
-.section5
-	width: 100%
-	height: 100vh
-	background:
-		// color: white
-		size: cover
-		position: center right
-		repeat: no-repeat
-
-.title5
-	position: absolute
-	margin-left: 35%
-	margin-top: 4%
-	transform: translate(0px,100px)
-	transition: all 1s ease-in-out 1s
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 4em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-
-.bubble2
-	background-color: #F2F2F2
-	border-radius: 5px
-	box-shadow: 0 0 6px #B2B2B2
-	display: inline-block
-	padding: 10px 18px
-	position: relative
-	vertical-align: top
-	float: right
-	transform:  scaleX(-1)
-	&::before
-		background-color: #F2F2F2
-		content: "\00a0"
-		display: block
-		height: 16px
-		position: absolute
-		top: 11px
-		transform: rotate(29deg) skew(-35deg)
-		width: 20px
-		box-shadow: -2px 2px 2px 0 rgba(178, 178, 178, 0.4)
-		left: -9px
-
-.scienceGuyExplains3
-	opacity: 0
-	position: relative
-	top: 40%
-	width: 40%
-	left: -30%
-	font-size: 1.5em
-	transition: all 1s ease-in-out
-	.flipMe
-		transform:  scaleX(-1)
-	span
-		font-weight: bold
-
-.pill2
-	//transform: translate(0px,-10%)
-	position: absolute
-	height: 100%
-	width: 100%
-	transition: all 1s ease-out
-	background:
-		image: url('../img/logoPill.png')
-		position: 90% center
-		size: 10%
-		repeat: no-repeat
-		attachment: fixed
-
-.section6
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/backBrick.jpg')
-		size: cover
-		position: center left
-		repeat: no-repeat
-
-.title6
-	padding-top: 10%
-	top: 50%
-	width: 30%
-	transform: translate(0%,0%)
-	transition: all 0.5s ease-in-out 0.5s
-	h2
-		font-family: Amaranth, sans-serif
-		font-size: 4em
-		font-weight: bold
-		text-shadow: 5px 4px 8px rgba(178, 178, 178, 0.7)
-		color: rgb(150,150,150)
-		span
-			color: #1ABA1F
-.text6
-	opacity: 0
-	top: 30%
-	width: 50%
-	margin-left: 20%
-	transition: all 1s ease-in-out 0.5s
-	p	
-		font-size: 1.5em
-		span
-			font-weight: bold
-.secFinal
-	position: relative
-	width: 100%
-	height: 100vh
-	background:
-		image: url('../img/backBlack.jpg')
-		size: cover
-		position: center left
-		repeat: no-repeat
-		attachment: fixed
-
-.logo2
-	position: absolute
-	height: 100%
-	width:  100%
-	//transform: translate(0px,-10%)
-	background:
-		image: url('../img/logoLettersWhite.png')
-		position: 54% center
-		size: 35%
-		repeat: no-repeat
-
-.finalText1
-	opacity: 0
-	transition: all 1.5s ease-in-out 1s
-	position: absolute
-	top: 10%
-	left: 10%
-	width: 25%
-	color: white
-	font-family: Amaranth, sans-serif
-	p
-		font-size: 2em
-
-.finalText2
-	transform: translate(0px,-200px)
-	transition: all 1s ease-in-out 
-	position: absolute
-	text-align: center
-	bottom: 10%
-	left: 37%
-	width: 25%
-	color: white
-	font-family: Amaranth, sans-serif
-	p
-		font-size: 2em
-	h1
-		font-size: 3em
-
-
-		
-//MEDIA QUERRIES
-
-@media screen and (max-width: 767px)
-	.navbar
-		.logoNav img
-			left: 30%
-	.navbar-nav
-		text-align: center
-		background-color: transparent
-		width: 70vw
-		padding-top: 0px
-		margin-top: 0px
-		margin-left: 10px
-		border-bottom-right-radius: 5%
-		border-bottom-left-radius: 5%
 	.navbar-toggle
-		background-color: transparent
-		margin-top: 10px
-		transition: 1s all ease
-	.navbarEffect
-		.navbar-nav
-			background-color: rgba(210,210,210,0.5)
-	.mainViewport
-		background:
-			image: url('../img/backPill.jpg')
-			size: cover
-			position: 85% center
-			repeat: no-repeat
-	.textAbobePills
-		margin-left: 25%
-		top: 10%
-		font-size: 3em
-		opacity: 100
-		transition: none
-		hr
-			width: 100%
-			margin-left: 0%
-	.textNext
-		display: none
-		h1
-			font-size: 1.5em
-			margin-left: -50%
-	.logo
-		margin-left: 0%
-		width: 100%
-		height: 110%
-		background-size: 100% auto
-		.pill
+		margin-top: 5%
+		margin-right: 10%
+		z-index: 1
+		.icon-bar
+			background-color: rgb(255,255,255)
+			margin-top: 5px
+			height: 4px
+			width: 25px
+
+	button
+		border: none
+
+	.navbar-brand
+		position: absolute
+		left: 50%
+		margin-left: -115px /* 50% of your logo width */
+		display: block
+		height: 150px
+		padding:
+			bottom: 10px
+		img
+			height: 100%
 			width: auto
-			background:
-				position: center
-				size: 50%
-			margin-right: 25%
-	.section1
-		background-size: auto
-	.title1
-		transform: translate(0px, 0px)
-		transition: none
-		top: 0%
-		left: 10%
-		//width: 100%
-	.title3
-		margin-left: 0%
-		transform: translate(0px, 0px)
-		transition: none
-	.title5
-		margin-left: 0%
-		transform: translate(0px, 0px)
-		transition: none
-	.whatItIs
-		top: 5%
-		right: 5%
-		width: 90%
-		opacity: 1
-		p
-			font-size: 1em
-	.blackBoard
-		background-image: url("../img/blackboardStrech.png")
-		margin-left: 2%
-		background-position: left
-		background-size: 170% 80%
-		width: 100%
-	.scienceGirlExplains
-		opacity: 1
-		top: 25%
-	.scienceGirl
-		top: -65%
-		width: 80%
-		opacity: 1
-		transform: none
-	.manyMeats
-		display: none
-	.vessel
-		background-image: url("../img/vesselTransparent.png")
 
-	.scienceGuyExplains
-		opacity : 1
-		p
-			font-size: 1.2em
+	.navbar-collapse
+		border: none
+		box-shadow: none
+		background: rgba(255,255,255,1)
+		margin-top: 50px
+		height: auto !important
 
-	.scienceGuyExplains2
-		font-size: 1.7em
-		transform: translate(0px, 0px)
-		opacity : 1
-		top: 0%
-		width: 140%
-		left: -40%
-		height: 100%
-		float: none
-		transition: none
-		background-color: rgba(255,255,255,0.2)
-
-	.scienceGuy
-		background-size: 50% auto
-	.section5
-		background-position: none
-	.pill2
-		display: none
-		background-position: 100% center
-		background-size: 30% auto
-	.title5
-		margin-left: 10%
-	.scienceGuyExplains3
-		opacity: 1
-		top: -55%
-		width: 90%
-		left: -5%
-		font-size: 1em
-	.section6
-		background-image: url("../img/backBrickMini.jpg")
-		background-size: 100% 100%
-	.textViewport
-		opacity: 1
+.main
+	background: #eb01a5,linear-gradient(left,#0078AA, #009EAA) 
+	background-image: url('../img/backIco.png') /* fallback */
+	background-image: url('../img/backIco.png'), linear-gradient(left,#0078AA, #009EAA) /* W3C */
+	background-image: url('../img/backIco.png'),-moz-linear-gradient(left, #0078AA, #009EAA) // FF 3.6+
+	background-image: url('../img/backIco.png'), -webkit-gradient(linear, 100% 0%, 0% 0%, color-stop(100%,#0078AA), color-stop(0%,#009EAA)) // Safari 4+, Chrome 2+
+	background-image: url('../img/backIco.png'), -webkit-gradient(left, #0078AA, #009EAA) // Safari 5.1+, Chrome 10+
+	background-image: url('../img/backIco.png'), -o-linear-gradient(left, #0078AA, #009EAA) // Opera 11.10
+	background:
+		size: 250px auto, 100% 100%
+		position: bottom -35px left -35px, center center
+		repeat: no-repeat
 
 
-	.title6
-		margin-left: 0%
-		width: 100%
-		padding-top: 1%
-		h2
-			font-size: 3em
-	.text6
-
-		opacity : 1
-		margin-left: 5%
-		width: 70%
-		padding-top: 10%
-		p
-			font-size: 1.2em
-			background-color: rgba(255,255,255,0.5)
-	.secFinal
-		background-position: right center
-	.logo2
-		background-size: 100% auto
-		background-image: url("../img/blueLogo.png")
-	.finalText1
-		opacity : 1
-		width: 75%
-		transform: translate(0px,0px)
-		p
-			font-size: 1.2em
-	.finalText2
-		opacity : 1
-		bottom: 2%
-		transform: translate(0px,0px)
-		h1
-			font-size: 1.2em
-		p
-			font-size: 1em
-	.next1
-		top: 190vh
-		left: 45vw
-	.next2
-		top: 290vh
-		left: 47vw
-	.next3
-		top: 90vh
-		left: 47vw
-	.next4
-		top: 490vh
-		left: 47vw
-	.next5
-		top: 590vh
-		left: 47vw
+.mainText
+	margin-left: 5%
+	margin-right: 5%
+	margin-top: 10%
+	min-height: 250px
+	text-align: center
+	h1
+		font-size: 2.5em
 		color: white
-	.next6
-		top: 690vh
-		left: 47vw
-@media (min-width: 768px)
-
-@media (max-width: 992px)
-
-	.navbar-default .navbar-nav li a
-		font-size: 0.9em
-		margin-left: -10px
-		margin-right: -10px
-
-@media (min-width: 1200px)
-
-@media only screen and (max-device-width: 1000px) and (orientation: landscape)
-	.mainViewport
-		height: 200vh
-	.section1
-		height: 200vh
-	.section2
-		height: 200vh
-	.section3
-		height: 200vh	
-	.section4
-		height: 200vh
-	.section5
-		height: 200vh
-	.section6
-		height: 200vh
-	.scienceGirlExplains
+		font-family: Netto Offc
+		span
+			color: #7AC943
+	p
+		color: white
+		font-size: 1em
+		
+#sec1,#sec2
+	.textSec
+		margin-top: 10%
+		margin-left: 5%
+		margin-right: 5%
+		text-align: center
+		h2
+			font-size: 1.8em
+			font-family: Netto Offc
+			font-weight: bold
+			color: #0078AA
+			span
+				color: #7AC943
 		p
+			text-align: center
+			line-height: 200%
+			color: #7f7f7f
+
+	.imgSec
+		margin-left: 10%
+		margin-right: 10%
+		margin-top: 10%
+		position: relative
+		#ribbon
+			position: absolute
+			max-width: 30%
+			height: auto
+			left: 38%
+			transform: translate(0px, -30px)
+			transition: transform 0.5s ease-in
+
+
+	#omsMeat
+		position: absolute
+
+.spaced
+	padding-top: 50%
+
+img.food
+	position: inline-block
+	max-width: 50%
+	height: auto
+	opacity: 0
+	transform: translateX(30px)
+	transition: all 0.4s ease-in-out
+	&.is-showing
+		opacity: 1
+		transform: translateX(0px)
+
+@media screen and (min-width: 768px)
+	.navbar-default
+		background-color: transparent
+		height: 100px
+		border-bottom: none
+		outline: none
+		padding-top: 50px
+		margin-right: 20px
+		.navbar-nav>li>a
+			color: white
+			font-size: 1em
+			&.first
+				border-top-left-radius: 20px
+			&:hover
+				box-shadow: inset 0 3px 9px rgba(0,0,0,0.5)
+			&:active
+				background-color: rgba(255,255,255,1)
+
+		.navbar-nav>.active>a
+			background-image: none
+			background-color: rgba(255,255,255,0)
+			box-shadow: inset 0 3px 9px rgba(0,0,0,0.5)
+			&:hover
+				background-color: rgba(255,255,255,1)
+		.navbar-collapse
+			margin-top: 0px
+			background-color: transparent
+
+		.navbar-brand
+			margin-top: -20px
+			left: auto
+			height: 100px
+			margin-left: 0px
+			padding-left: 5%
+			img
+				height: 100%
+				width: auto
+				padding-left: 50px
+
+	.nav
+		width: 60%
+		li
+			width: 25%
+			text-align: center
+	.main
+		background-size: 400px auto, 100% 100%
+		background-position: bottom -80px left -35px, center center
+		min-height: 50vh
+	.mainText
+		margin-right: 15%
+		margin-left: 15%
+		margin-top: 10%
+		p
+			font-size: 1.3em
+		h1
+			font-size: 3em
+			padding-top: 20px
+	#sec1,#sec2
+		.textSec
+			margin-left: 10%
+			margin-right: 10%
+		.imgSec
+			margin-left: 25%
+			margin-right: 25%
+
+	.spaced
+		padding-top: 30%
+
+@media screen and (min-width: 1280px)	
+	.navbar-default
+		margin-right: 70px
+		.navbar-nav>li>a
+			font-weight: bold
+			color: white
 			font-size: 1.5em
-	.textNext
-		display: none
-	// .textViewport
-	// 	top: 180vh
-	// 	left: 40vw		
-	// .next1
-	// 	top: 380vh
-	// 	left: 45vw
-	// .next2
-	// 	top: 580vh
-	// 	left: 47vw
-	// .next3
-	// 	top: 180vh
-	// 	left: 47vw
-	// .next4
-	// 	top: 780vh
-	// 	left: 47vw
-	// .next5
-	// 	top: 980vh
-	// 	left: 47vw
-	// 	color: white
-	// .next6
-	// 	top: 1080vh
-	// 	left: 47vw
+		.navbar-brand
+			margin-top: -20px
+			left: auto
+			height: 100px
+			margin-left: 0px
+			padding-left: 5%
+			img
+				height: 175%
+				width: auto
+				padding-left: 50px
+	.mainText
+		margin-top: 15%
+		margin-right: 20%
+		margin-left: 20%
+		p
+			font-size: 2em
+		h1
+			font-size: 3.5em
+			padding-top: 50px
+	.main
+		background-size: 700px auto, 100% 100%
+		background-position: bottom -100px left -35px, center center
+		min-height: 100vh
+
+	#sec1,#sec2
+		.textSec
+			margin-left: 20%
+			margin-right: 20%
+			h2
+				font-size: 3em
+			p
+				font-size: 1.5em
+				margin-top: 50px		
+		.imgSec
+			margin-top: 5%
+			margin-left: 35%
+			margin-right: 35%
+			#ribbon
+				transform: translate(0px, -80px)
+				transition: transform 0.5s ease-in	
+	.spaced
+		padding-top: 10%

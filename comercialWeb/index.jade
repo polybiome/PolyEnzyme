@@ -17,11 +17,6 @@ html.no-js(lang='')
     link(rel='apple-touch-icon', href='apple-touch-icon.png')
     link(href='https://fonts.googleapis.com/css?family=Amaranth:400,700' rel='stylesheet' type='text/css')
     link(rel='stylesheet', href='css/bootstrap.min.css')
-    style.
-      body {
-      padding-top: 50px;
-      padding-bottom: 20px;
-      }
     link(rel='stylesheet', href='css/bootstrap-theme.min.css')
     link(rel='stylesheet', href='css/main.css')
     script(src='js/vendor/modernizr-2.8.3-respond-1.4.2.min.js')
@@ -33,167 +28,71 @@ html.no-js(lang='')
         |  browser. Please 
         a(href='http://browsehappy.com/') upgrade your browser
         |  to improve your experience.
-    .navbar.navbar-default.navbar-fixed-top(role='navigation')
-      .container
-        .navbar-header
-          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-            span.sr-only Toggle Navigation
-            span.icon-bar
-            span.icon-bar
-            span.icon-bar
-          a.navbar-brand(data-scroll='', href='#')
-            .logoNav
-              img(src='img/logo3.png')
-        .navbar-collapse.collapse
-          ul.nav.navbar-nav.navbar-right
-            li
-              a(href='underConstruction.html') SUPPORT US
-            li
-              a(href='underConstruction.html') FAQ
-            li
-              a(href='underConstruction.html') IGEM PAGE
-            li
-              a(href='underConstruction.html') OUR BLOG
-            li
-              a(href='underConstruction.html') THE TEAM
-
-    header.mainViewport
-      h2.textAbobePills Safer 
-        span meat
-        |.
-        hr
-      //.pillsAndMeat
-      .logo
-        .pill
-      .textNext.textViewport
-        h1 Scroll to know more
-          br
-          a(data-scroll,href="#section1")
-            span.glyphicon.glyphicon-chevron-down
-    .section1#section1
-      .title1
+    .main
+      nav.navbar.navbar-default
+        .container-fluid
+          // Brand and toggle get grouped for better mobile display
+          .navbar-header
+            button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#bs-example-navbar-collapse-1', aria-expanded='false')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href='#')
+              img(src='img/icoMinimal.png').img-responsive
+          // Collect the nav links, forms, and other content for toggling
+          .navbar-collapse#bs-example-navbar-collapse-1.collapse
+            ul.nav.navbar-nav.navbar-right
+              li.active
+                a(href='#').first
+                  | Home 
+                  span.sr-only (current)
+              li
+                a(href='#') Faq
+              li
+                a(href='#') Igem Page
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown', role='button', aria-haspopup='true', aria-expanded='false')
+                  | Get in contact! 
+                  span.caret
+                ul.dropdown-menu
+                  li
+                    a(href='#') Our blog
+                  li
+                    a(href='#') The team
+                  li.divider(role='separator')
+                  li
+                    a(href='#') Support us!
+      .mainText
+        p PolyBiome is an initiative to reduce the cancerigenous potential of red and processed meats using safe microorganisms.
+        h1 LOREM IPSUM 
+          span SI AMET 
+    #sec1
+      .textSec
         h2
-          span WHAT 
-          |IS IT?
-      .whatItIs.bubble
-        p The polybiome project is an initiative to reduce the cancerigenous potential of meat using microorganisms commonly found inside our body. It consists on a probiotic with 8 different organisms designed to transform harmful components of meat into harmless byproducts that will be naturally discarded by the body. 
-          span But, how does it work?
-      .textNext.next1
-        h1 Find out!
-          br
-          a(data-scroll,href="#section2")
-            span.glyphicon.glyphicon-chevron-down
-    .section2#section2
-      .title3
-        h2 The 
-          span problem:
-      .blackBoard
-        .scienceGirlExplains
-          p 
-            |In some daily foods there are molecules called 
-            span polyamines
-            |, that we digest and absorbe at the intestinal tract. Polyamines are involved in cell proliferation and are normally found in small quantities in our body. However, it has been shown that a disbalance in the amount of polyamines is a factor of risk for cancer.
-      .scienceGirl
-      .textNext.next2
-              h1 Next
-                br
-                a(data-scroll,href="#section3")
-                  span.glyphicon.glyphicon-chevron-down
-      
-    .section3#section3
-      .sec3Inf
-        .container
-            .row
-              .col-md-4.col-md-push-1
-                .title2
-                  h2
-                    |WHICH 
-                    span FOODS 
-                    |CONTAIN MORE 
-                    span POLYAMINES?
-              .col-md-7
-                .scienceGuyExplains.bubble
-                  P
-                    |Acording to the   
-                    span World Health Organitzation 
-                    |one every 33 cancers is ascribed to red or processed meat. 
-                    |In the Carcinogenic Classification Groups ranking processed meats are in the first risk group, and red meats in the second.
-            .row
-              .manyMeats
-                  .row
-                    .col-md-4
-                    .col-md-4
-                      img(src="img/meat2.png").img-responsive
-                    .col-md-4
-                      img(src="img/meat3.png").img-responsive
-                  .row
-                    .col-md-4
-                      img(src="img/meat4.png").img-responsive
-                    .col-md-4(style="width: 27%")
-                      img(src="img/meat6.png").img-responsive
-                    .col-md-4
-                      img(src="img/meat5.png").img-responsive
-      .textNext.next3
-        h1 Next
-          br
-          a(data-scroll,href="#section4")
-            span.glyphicon.glyphicon-chevron-down
-
-    .section4#section4
-      .scienceGuy
-      .vessel
-        .scienceGuyExplains2
-          .title4
-            h2 How do we 
-              span avoid 
-              |them?
-          p
-          | Once digested, the polyamines enter the blod floow and spread across the body, making them difficult to target. Therefore, it is nescesary an approach that eliminates this molecules before they are absorbed. 
-      .textNext.next4
-        h1 Next
-          br
-          a(data-scroll,href="#section5")
-            span.glyphicon.glyphicon-chevron-down
-
-    .section5#section5
-      .scienceGuy
-      .title5
-        h2 Inside 
-          span Job 
-          |Approach
-      .scienceGuyExplains3.bubble2
-        .flipMe
-          p
-          | The microrganisms in Polybiome degrade the poliamines in the intestinal tract, reducing the external intake and reducing the risk factor of cancer. 
-      .pill2
-      .textNext.next5
-        h1 Next
-          br
-          a(data-scroll,href="#section6")
-            span.glyphicon.glyphicon-chevron-down
-
-    .section6#section6
-      .pill2
-      .title6
-          h2 Polybiome is going to 
-            span iGEM!
-      .text6
-        p iGEM is an international synthetic biology competition hold in Boston. We'll be representing university Pompeu Fabra and exposing the Polybiome project. 
-      .textNext.next6
-        h1 Last
-          br
-          a(data-scroll,href="#secFinal")
-            span.glyphicon.glyphicon-chevron-down
-
-    .secFinal#secFinal
-      .logo2
-      .finalText1
-          p Have Questions? Contact us or go to the FAQ. 
-      .finalText2
-          h1 Contact Information
-          p igem@upf.edu
-      .pill2
-    // /container
+          span One 
+          |in every 33 
+          span cancers 
+          |is adscribed to processed or red meat. 
+        p Acording to the World Health Organitzation Lorem ipsum Mollit incididunt nostrud consectetur sit aute dolore proident in est culpa consectetur officia enim veniam minim laborum in sint minim Excepteur eu in ullamco minim sed ex culpa consequat ad nulla in pariatur veniam quis laborum amet Ut in do dolore in culpa dolor.
+      .imgSec
+        img(src='img/ribbon.png').img-responsive#ribbon
+        img(src='img/omsMeat.png').img-responsive#omsMeat
+      .textSec.spaced
+        p Lorem ipsum Eiusmod culpa exercitation deserunt labore Duis magna deserunt ex magna consequat do exercitation nostrud et in id tempor cupidatat eiusmod commodo dolor in ut sit laborum tempor Duis. Lorem ipsum Sint elit minim ea adipisicing officia tempor officia est mollit nostrud amet eu culpa consequat anim voluptate pariatur voluptate ad mollit.
+      .imgSec
+        img(src='img/cow.png').food
+        img(src='img/pig.png').food   
+        img(src='img/bacon.png').food
+        img(src='img/lamb.png').food
+    hr 
+    #sec2
+      .textSec
+        h2
+          span Lorem ipsum 
+          |Culpa Ut anim culpa ut magna.
+        p Commodo Duis qui magna Duis ex incididunt culpa anim pariatur ut deserunt cupidatat qui officia irure ut consequat anim dolore reprehenderit ullamco in labore laboris consequat Ut in dolor deserunt irure quis sit fugiat.
+    .tempDiv
     script(script src="js/vendor/jquery-1.12.0.min.js")
     script(src='js/vendor/bootstrap.min.js')
     script(src="js/smooth-scroll.js")
