@@ -1,4 +1,4 @@
 # database
 Database for PolyEnzyme
 
-- example1
+> example1.json
