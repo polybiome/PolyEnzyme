@@ -86,7 +86,6 @@ class NodeCanvas(FloatLayout):
 	gridAdded = BooleanProperty(False)
 	grid = ObjectProperty('Default')
 	gridColor = ObjectProperty('Default')
-	once = BooleanProperty(True)
 
 	simulationSpeed = BoundedNumericProperty(0, min=0, max=100)
 	scrollPos = NumericProperty(0)
@@ -109,32 +108,32 @@ class NodeCanvas(FloatLayout):
 	def canvasMove(self, etype, motionevent, touch):
 
 		if 'button' in touch.profile:
-			if touch.button == 'scrolldown' and self.scrollPos < 5 and self.once:
-				self.once = False
+			if touch.button == 'scrolldown' and self.scrollPos <= 8:
 				self.scrollPos +=1
-				Clock.schedule_once(self.unblockOnce, 0.1)
 				for compound in self.compounds:
 					centerB = compound.center
+					print(centerB)
 					for k in range(2):
-						compound.size[k] += 4*zoomRes
-					compound.center[0] -= 0.2*(touch.spos[0]*Window.width - compound.center[0])
-					compound.center[1] -= 0.2*(touch.spos[1]*Window.height - compound.center[1])
+						compound.size[k] += zoomRes
+					print(centerB[0]-compound.center[0])
+					compound.center[0] += 0.1*(compound.center[0] - touch.x)#-=zoomRes/2
+					compound.center[1] += 0.1*(compound.center[1] - touch.y)#-=zoomRes/2
+					print(compound.center)
+					print('##########')
 					compound.updateReactions()
 
-			if touch.button == 'scrollup' and self.scrollPos > -4 and self.once:
-				self.once = False
+			elif touch.button == 'scrollup' and self.scrollPos >= -8:
 				self.scrollPos -=1
-				Clock.schedule_once(self.unblockOnce, 0.1)
 				for compound in self.compounds:
 					centerB = compound.center
+					print(compound.center)
 					for k in range(2):
-						compound.size[k] -= 4*zoomRes
-					compound.center[0] += 0.2*(touch.spos[0]*Window.width - compound.center[0])
-					compound.center[1] += 0.2*(touch.spos[1]*Window.height - compound.center[1])
+						compound.size[k] -= zoomRes
+					compound.center[0] -= 0.1*(compound.center[0] - touch.x)#+=zoomRes/2
+					compound.center[1] -= 0.1*(compound.center[1] - touch.y)#+=zoomRes/2
+					print(compound.center)
+					print('##########')
 					compound.updateReactions()
-
-	def unblockOnce(self,*args):
-		self.once = True
 
 	def on_simulationSpeed(self,*args):
 		Clock.unschedule(self.simulateSystem)
@@ -265,9 +264,9 @@ class NodeCanvas(FloatLayout):
 		sol = integrateODES(compounds,self.tmax,self.dt,self.resolution)
 
 		for obj, value in sol.items():
-			#fillColor = obj.fillColor[:-1]
-			#plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
-			plt.plot(t, value[:-1], label=obj.name, linewidth=3)
+			fillColor = obj.fillColor[:-1]
+			plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
+			#plt.plot(t, value[:-1], label=obj.name, linewidth=3)
 		
 		plt.legend(loc='best')
 		plt.xlabel('t')

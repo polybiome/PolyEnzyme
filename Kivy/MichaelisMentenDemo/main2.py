@@ -23,8 +23,6 @@ from kivy.properties import ListProperty,BooleanProperty,StringProperty,NumericP
 from kivy.config import Config
 from kivy.uix.image import Image
 from settingsjson import settings_json
-from kivy.input.motionevent import MotionEvent
-#from kivy.lang import Builder
 
 import matplotlib.pyplot as plt
 import inspect
@@ -40,16 +38,6 @@ defaultFillColor = [0.9,0.9,0.9,0.5]
 defaultContextColor = [198/255,40/255,40/255,0.8]
 sourcesContextColor = [0/255, 137/255, 123/255,0.8]
 productsContextColor = [46/225, 125/255, 50/255,0.8]
-defaultNodeSize = [100,100]
-defaultArrowSize1Final = 15
-defaultArrowSize2Final = 30
-defaultWidth = 2
-defaultArrowSize = 20
-defaultInhibitionH = 0.1
-defaultInhibitionW = 5
-defaultGridDivision = 40
-zoomRes = 5
-specialEffectDelay = 20
 
 class MainCanvas(Screen):
 	contextText = StringProperty('Create\nReaction')
@@ -65,7 +53,7 @@ class MainCanvas(Screen):
 	def on_deletingNodes(self):
 		print('nodes being deleted')
 
-class NodeCanvas(FloatLayout):
+class NodeCanvas(Scatter):
 	compounds = ListProperty([])
 	reactions = ListProperty([])
 	blocked = BooleanProperty(False)
@@ -76,21 +64,15 @@ class NodeCanvas(FloatLayout):
 	clickedS = ListProperty()
 	clickedP = ListProperty()
 	totalC = NumericProperty(0)
-	movingCanvas = StringProperty('0')
-	#dFromClick = ListProperty([0,0])
 
 	timeClock = NumericProperty(0)
-	timeClock2 = NumericProperty(0)
 	movingNode = BooleanProperty(False)
 	firstTouch = BooleanProperty(True)
 	gridAdded = BooleanProperty(False)
 	grid = ObjectProperty('Default')
 	gridColor = ObjectProperty('Default')
-	once = BooleanProperty(True)
 
 	simulationSpeed = BoundedNumericProperty(0, min=0, max=100)
-	scrollPos = NumericProperty(0)
-
 
 	#WARNING: DOES NOT UPDATE AUTOMATICALLY BASED ON SETTING'S SAVED VALUE: TO DO
 	tmax = NumericProperty(2) 
@@ -99,42 +81,11 @@ class NodeCanvas(FloatLayout):
 
 	def __init__(self, **kwargs):
 		super(NodeCanvas, self).__init__(**kwargs)
-		Clock.schedule_interval(self.animVarious, 1/90)
+		Clock.schedule_interval(self.animArrows, 1/90)
 
 		Window.bind(on_resize= partial(self.updateWindow, self), on_enter = partial(self.updateWindow, self),on_draw= partial(self.updateWindow, self))
-		Window.bind(on_motion=self.canvasMove)
 		self.gridTexture = Image(source = 'img/cell.png').texture
 		self.gridTexture.wrap = 'repeat'
-
-	def canvasMove(self, etype, motionevent, touch):
-
-		if 'button' in touch.profile:
-			if touch.button == 'scrolldown' and self.scrollPos < 5 and self.once:
-				self.once = False
-				self.scrollPos +=1
-				Clock.schedule_once(self.unblockOnce, 0.1)
-				for compound in self.compounds:
-					centerB = compound.center
-					for k in range(2):
-						compound.size[k] += 4*zoomRes
-					compound.center[0] -= 0.2*(touch.spos[0]*Window.width - compound.center[0])
-					compound.center[1] -= 0.2*(touch.spos[1]*Window.height - compound.center[1])
-					compound.updateReactions()
-
-			if touch.button == 'scrollup' and self.scrollPos > -4 and self.once:
-				self.once = False
-				self.scrollPos -=1
-				Clock.schedule_once(self.unblockOnce, 0.1)
-				for compound in self.compounds:
-					centerB = compound.center
-					for k in range(2):
-						compound.size[k] -= 4*zoomRes
-					compound.center[0] += 0.2*(touch.spos[0]*Window.width - compound.center[0])
-					compound.center[1] += 0.2*(touch.spos[1]*Window.height - compound.center[1])
-					compound.updateReactions()
-
-	def unblockOnce(self,*args):
-		self.once = True
 
 	def on_simulationSpeed(self,*args):
 		Clock.unschedule(self.simulateSystem)
@@ -145,22 +96,16 @@ class NodeCanvas(FloatLayout):
 				Clock.schedule_interval(self.simulateSystem, 1/self.simulationSpeed)
 
 	def updateWindow(self,*args):
-		#print('updating window')
 		if self.gridAdded:
-
-			#gridDivision = defaultGridDivision+5*(1-defaultNodeSize[0]/self.compounds[0].size[0]) if self.compounds else defaultGridDivision
-			gridDivision = defaultGridDivision*(self.compounds[0].size[0]/defaultNodeSize[0]) if self.compounds else defaultGridDivision
-
 			self.canvas.before.remove(self.gridColor)
 			self.canvas.before.remove(self.grid)
-			self.gridTexture.uvsize = (int(self.width / gridDivision) ,int(self.height / gridDivision)) #20
+			self.gridTexture.uvsize = (int(self.width / 40) ,int(self.height / 40)) #20
 			self.grid = Rectangle(size = self.size, texture = self.gridTexture, pos = self.pos)
 			self.canvas.before.add(self.gridColor)
 			self.canvas.before.add(self.grid)
 		
 	def addGrid(self):
-		
-		self.gridTexture.uvsize = (int(self.width / defaultGridDivision) ,int(self.height / defaultGridDivision)) #20
+		self.gridTexture.uvsize = (int(self.width / 40) ,int(self.height / 40)) #20
 		self.grid = Rectangle(size = self.size, texture = self.gridTexture, pos = self.pos)
 		self.gridColor = Color(244/255,244/255,244/255,0.2)
 		self.canvas.before.add(self.gridColor)
@@ -265,9 +210,9 @@ class NodeCanvas(FloatLayout):
 		sol = integrateODES(compounds,self.tmax,self.dt,self.resolution)
 
 		for obj, value in sol.items():
-			#fillColor = obj.fillColor[:-1]
-			#plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
-			plt.plot(t, value[:-1], label=obj.name, linewidth=3)
+			fillColor = obj.fillColor[:-1]
+			plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
+			#plt.plot(t, value[:-1], label=obj.name, linewidth=3)
 		
 		plt.legend(loc='best')
 		plt.xlabel('t')
@@ -291,7 +236,7 @@ class NodeCanvas(FloatLayout):
 
 		myPopup.open()
 
-	def animVarious(self, *args):
+	def animArrows(self, *args):
 
 		self.timeClock += 0.25
 		if self.timeClock > 90:
@@ -316,7 +261,7 @@ class NodeCanvas(FloatLayout):
 							arrowSize1 = 0
 						else:
 							arrowPos1 =  arrowPos + 0.5*(np.sin(1/80*self.timeClock*(np.pi/2)))
-							arrowSize1 = defaultArrowSize1Final*(P.size[0]/defaultNodeSize[0])*(1+np.sin(2*self.timeClock*np.pi/160))
+							arrowSize1 = 15*(1+np.sin(2*self.timeClock*np.pi/160))
 
 						if self.timeClock < 20:
 							arrowPos2 = arrowPos
@@ -324,7 +269,7 @@ class NodeCanvas(FloatLayout):
 						else:
 							arrowPos2 =  arrowPos + 0.5*(np.sin(1/80*self.timeClock*(np.pi/2) - (20*np.pi/180)))
 
-							arrowSize2 = defaultArrowSize2Final*(P.size[0]/defaultNodeSize[0])*np.sin(2*self.timeClock*np.pi/180 - (20*np.pi/180))
+							arrowSize2 = 30*np.sin(2*self.timeClock*np.pi/180 - (20*np.pi/180))
 					else:
 						arrowPos = np.sqrt((P.center[0] - centroidX)**2 + (P.center[1] - centroidY)**2)
 						arrowPos = arrowPos/(arrowPos + 40)
@@ -333,7 +278,7 @@ class NodeCanvas(FloatLayout):
 							arrowSize1 = 0
 						else:
 							arrowPos1 =  0.9*(np.sin(1/80*self.timeClock*(np.pi/2)))
-							arrowSize1 = defaultArrowSize1Final*(P.size[0]/defaultNodeSize[0])*(1+np.sin(2*self.timeClock*np.pi/160))
+							arrowSize1 = 15*(1+np.sin(2*self.timeClock*np.pi/160))
 
 						if self.timeClock < 20:
 							arrowPos2 = arrowPos
@@ -341,7 +286,7 @@ class NodeCanvas(FloatLayout):
 						else:
 							arrowPos2 = 0.9*(np.sin(1/80*self.timeClock*(np.pi/2) - (20*np.pi/180)))
 
-							arrowSize2 = defaultArrowSize2Final*(P.size[0]/defaultNodeSize[0])*np.sin(2*self.timeClock*np.pi/180 - (20*np.pi/180))
+							arrowSize2 = 30*np.sin(2*self.timeClock*np.pi/180 - (20*np.pi/180))
 
 	
 
@@ -357,24 +302,6 @@ class NodeCanvas(FloatLayout):
 
 					linePos -=4
 
-			# for compound in self.compounds:
-			# 	if compound.special == 'sourceSink':
-			# 		for k in range(5):
-			# 			if self.timeClock < k*specialEffectDelay:
-			# 				compound.specialEffectSize[k] = [0,0]
-			# 			else:
-			# 				compound.specialEffectSize[k] = [compound.size[0] * ((self.timeClock-k*specialEffectDelay)/(90-k*specialEffectDelay)), compound.size[1] * ((self.timeClock-k*specialEffectDelay)/(90-k*specialEffectDelay))]
-
-			self.timeClock2 += 0.01
-			if self.timeClock2 > 90:
-				self.timeClock2 = 0
-
-			for compound in self.compounds:
-					if compound.special == 'sourceSink':
-						for k in range(5):
-							compound.specialEffectSize[k] = [(compound.size[0] * (1+np.sin(self.timeClock2 - k*specialEffectDelay)))/2,(compound.size[1] * (1+np.sin(self.timeClock2 - k*specialEffectDelay)))/2]#-k*specialEffectDelay)
-
-										
 	def buttonBehaviour(self):
 		if not self.settingS and not self.settingP and not self.deletingNodes and len(self.compounds) > 1:
 			NodeCanvas.blocked = True
@@ -442,10 +369,10 @@ class NodeCanvas(FloatLayout):
 			self.reactions[-1].boxPosition = (int(centroidX),int(centroidY))
 
 			for S in self.clickedS:
-				self.reactions[-1].myLines.add(Line(bezier=(S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY),width = defaultWidth*(S.size[0]/defaultNodeSize[0])))
+				self.reactions[-1].myLines.add(Line(bezier=(S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY),width = 2))
 
 			for P in self.clickedP:
-				self.reactions[-1].myLines.add(Line(bezier=(centroidX,centroidY,centroidPX,centroidPY,P.center[0],P.center[1]), width = defaultWidth*(P.size[0]/defaultNodeSize[0])))
+				self.reactions[-1].myLines.add(Line(bezier=(centroidX,centroidY,centroidPX,centroidPY,P.center[0],P.center[1]), width = 2))
 				
 
 				arrowPos = np.sqrt((P.center[0] - centroidX)**2 + (P.center[1] - centroidY)**2)
@@ -591,51 +518,20 @@ class NodeCanvas(FloatLayout):
 		self.iChangeText(iBox)
 
 	def on_touch_down(self, touch):
-		if touch.button == 'left':
-			for compound in self.compounds:
-				compound.dFromClick = [touch.x - compound.center[0], touch.y - compound.center[1]]
+		if self.firstTouch:
+			self.firstTouch = False
+			self.remove_widget(self.children[0]) #WARNING, BLIND SELECTION TO REMOVE ADVICE WIDGET
 
-			if self.collide_point(*touch.pos) and not self.blocked and not self.deletingNodes:
-				for child in self.children:
-					try:
-						if child.isclicked(touch):	
-							return super(NodeCanvas, self).on_touch_down(touch)			
-					except AttributeError:	
-						print('WARNING: Clicked element not defined')
-				touch.grab(self)
-				return True
-
-	def on_touch_move(self, touch):
-		if touch.grab_current is self and not self.settingS and not self.settingP and not self.deletingNodes:
-			self.movingCanvas = '1'
-			for compound in self.compounds:
-				compound.center=[touch.x - compound.dFromClick[0], touch.y - compound.dFromClick[1]]
-				compound.updateReactions()
-				#for k in range(2):
-					#compound.pos[k] -= (touch.pos[k]-self.dFromClick[k])*0.1
-				
-	def on_touch_up(self, touch):
-		if touch.button == 'left':
-			if self.firstTouch:
-				self.firstTouch = False
-				self.remove_widget(self.children[0]) #WARNING, BLIND SELECTION TO REMOVE ADVICE WIDGET
-
-			if self.collide_point(*touch.pos) and not self.blocked and not self.deletingNodes and self.movingCanvas == '0':
-				for child in self.children:
-					try:
-						if child.isclicked(touch):
-							return super(NodeCanvas, self).on_touch_down(touch)
-					except AttributeError:
-						print('WARNING: Clicked element not defined')
-				self.pressed = touch.pos
-				return True
-
-			if self.movingCanvas == '1':
-				self.movingCanvas = '2' 
-			elif self.movingCanvas == '2':
-				self.movingCanvas = '0'
-
-			return super(NodeCanvas, self).on_touch_down(touch)
+		if self.collide_point(*touch.pos) and not self.blocked and not self.deletingNodes:
+			for child in self.children:
+				try:
+					if child.isclicked(touch):
+						return super(NodeCanvas, self).on_touch_down(touch)
+				except AttributeError:
+					print('WARNING: Clicked element not defined')
+			self.pressed = touch.pos
+			return True
+		return super(NodeCanvas, self).on_touch_down(touch)
 
 	def printCompounds(self):
 		print('#####COMPOUNDS######')
@@ -668,7 +564,6 @@ class NodeCanvas(FloatLayout):
 			size_hint=(None,None)))
 
 		self.add_widget(self.compounds[-1])
-		self.compounds[-1].size = self.compounds[0].size if self.compounds else defaultNodeSize
 
 		self.setNodeData(self.compounds[-1])
 		#self.printCompounds()
@@ -690,11 +585,9 @@ class NodeCanvas(FloatLayout):
 			text = value
 			if text == 'none':
 				compound.special = 'none'
-				compound.c = 1
 			elif text == 'Infinite Source/Sink':
 				compound.special = 'sourceSink'
 				compound.c = 0
-			self.onCchange()
 			compound.changeFillColor()
 
 
@@ -744,6 +637,7 @@ class NodeCanvas(FloatLayout):
 		self.reactions.remove(reaction)
 		self.updateFillColor(reaction)
 		
+
 	def updateFillColor(self,reaction):
 		allElements = reaction.S + reaction.P
 		if len(allElements) > 2:
@@ -819,7 +713,6 @@ class GraphNode(Label):
 	fillColor = ListProperty(defaultFillColor)
 	dFromClick = ListProperty([0,0])
 	totalC = NumericProperty(0)
-	specialEffectSize = ListProperty(5*[[0,0]])
 
 	def __hash__(self):
 		return hash(self.name)
@@ -831,10 +724,7 @@ class GraphNode(Label):
 
 		for k in range(0,3): #This averages colors. Do I have to check all reactions? (Could be optimized)
 			myList = [reaction.linkColor[k] if self in (reaction.S + reaction.P) else None for reaction in self.parent.reactions]
-			try:
-				self.fillColor[k] = np.ma.average(np.ma.array(myList,mask=[element is None for element in myList]))	
-			except ZeroDivisionError:
-				print('WARNING: Division by zero when setting color')
+			self.fillColor[k] = np.ma.average(np.ma.array(myList,mask=[element is None for element in myList]))		
 
 	def on_c(self, instance, value):
 		self.parent.onCchange()
@@ -848,42 +738,41 @@ class GraphNode(Label):
 		anim.start(self) if self.deletingNodes else anim.stop(self)
 
 	def on_touch_down(self, touch):
-		if touch.button == 'left':
-			if self.collide_point(*touch.pos):
-				self.dFromClick = [touch.x - self.center[0], touch.y - self.center[1]] #Mantains center distance from cursor when moving node
-				touch.grab(self)
+		if self.collide_point(*touch.pos):
+			self.dFromClick = [touch.x - self.center[0], touch.y - self.center[1]] #Mantains center distance from cursor when moving node
+			touch.grab(self)
 
-				if touch.is_double_tap and not self.parent.deletingNodes and not self.parent.settingS and not self.parent.settingP:
-					self.parent.setNodeData(self)
+			if touch.is_double_tap and not self.parent.deletingNodes and not self.parent.settingS and not self.parent.settingP:
+				self.parent.setNodeData(self)
 
-				###REMOVE NODE###
-				if self.parent.deletingNodes:#EnzimeDynamicsApp.get_running_app().deletingNodes:
-					print('DELETING NODES ON')
-					self.parent.removeNodeFromList(self)
-					self.parent.remove_widget(self)
+			###REMOVE NODE###
+			if self.parent.deletingNodes:#EnzimeDynamicsApp.get_running_app().deletingNodes:
+				print('DELETING NODES ON')
+				self.parent.removeNodeFromList(self)
+				self.parent.remove_widget(self)
 
-				###CREATE REACTION###
-				elif self.parent.settingS:
-					#print('--Reaction clicked--')
-					if self not in self.parent.clickedS:
-						self.parent.clickedS.append(self)
+			###CREATE REACTION###
+			elif self.parent.settingS:
+				#print('--Reaction clicked--')
+				if self not in self.parent.clickedS:
+					self.parent.clickedS.append(self)
+					# with self.canvas: #Ellipsis (deprecated)
+					# 	Color(0,0.3,0.5,0.3)
+					# 	Ellipse(size = self.size, pos = self.pos)
+				else:
+					self.parent.clickedS.remove(self)
+					#self.canvas.remove(self.canvas.children[-1]) #Ellipsis (deprecated)
+
+			elif self.parent.settingP:
+				if self not in self.parent.clickedS:
+					if self not in self.parent.clickedP:
+						self.parent.clickedP.append(self)
 						# with self.canvas: #Ellipsis (deprecated)
-						# 	Color(0,0.3,0.5,0.3)
+						# 	Color(0.3,0,0.5,0.3)
 						# 	Ellipse(size = self.size, pos = self.pos)
 					else:
-						self.parent.clickedS.remove(self)
+						self.parent.clickedP.remove(self)
 						#self.canvas.remove(self.canvas.children[-1]) #Ellipsis (deprecated)
-
-				elif self.parent.settingP:
-					if self not in self.parent.clickedS:
-						if self not in self.parent.clickedP:
-							self.parent.clickedP.append(self)
-							# with self.canvas: #Ellipsis (deprecated)
-							# 	Color(0.3,0,0.5,0.3)
-							# 	Ellipse(size = self.size, pos = self.pos)
-						else:
-							self.parent.clickedP.remove(self)
-							#self.canvas.remove(self.canvas.children[-1]) #Ellipsis (deprecated)
 
 	def on_touch_move(self, touch):
 		try:
@@ -894,144 +783,136 @@ class GraphNode(Label):
 				if (touch.x - self.width/2 - 2) < self.parent.pos[0]:
 					self.center[0] = self.parent.pos[0] + self.width/2 + 2
 
-				self.updateReactions()
+				try:
+					for reaction in self.parent.reactions:
+						for moved in (reaction.S + reaction.P + reaction.I):
+							if moved == self:
+								
+								centroidX = np.average([element.center[0] for element in (reaction.S + reaction.P)])
+								centroidY = np.average([element.center[1] for element in (reaction.S + reaction.P)])
+								centroidSX = np.average([element.center[0] for element in reaction.S])
+								centroidSY = np.average([element.center[1] for element in reaction.S])
+								centroidPX = np.average([element.center[0] for element in reaction.P])
+								centroidPY = np.average([element.center[1] for element in reaction.P])
+
+								reaction.boxPosition = (int(centroidX),int(centroidY))
+
+								linePos = 1
+
+								for S in reaction.S:
+									reaction.myLines.children[linePos].bezier = (S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY)
+									linePos += 2
+
+								for P in reaction.P:
+									reaction.myLines.children[linePos].bezier = (centroidX,centroidY,centroidPX,centroidPY,P.center[0],P.center[1])
+									linePos += 2
+
+									arrowPos = np.sqrt((P.center[0] - centroidX)**2 + (P.center[1] - centroidY)**2)
+									arrowPos = arrowPos/(arrowPos + 50)
+
+									if len(reaction.P) == 1:
+										arrowPos = 0.4
+
+									fromPointX,fromPointY,toPointX,toPointY = self.parent.computeBezier([centroidX,centroidY],[centroidPX,centroidPY],P.center,arrowPos)
+
+									myPoints = self.parent.returnPoints(fromPointX,fromPointY,toPointX,toPointY,20,20/4)
+									reaction.myLines.children[linePos].points=myPoints
+									linePos += 2
+
+									arrowPos -= 0.2
+									fromPointX,fromPointY,toPointX,toPointY = self.parent.computeBezier([centroidX,centroidY],[centroidPX,centroidPY],P.center,arrowPos)
+									myPoints = self.parent.returnPoints(fromPointX,fromPointY,toPointX,toPointY,20,20/4)
+									reaction.myLines.children[linePos].points=myPoints
+									linePos += 2
+
+								centerX = centroidX
+								centerY = centroidY
+
+								
+								iBoxesPos = 0
+
+								if reaction.iBoxes:
+									for I in reaction.I:
+
+										centroidSX = np.average([element.center[0] for element in (reaction.S + [I])])
+										centroidSY = np.average([element.center[1] for element in (reaction.S + [I])])
+										centroidPX = np.average([element.center[0] for element in (reaction.P + [I])])
+										centroidPY = np.average([element.center[1] for element in (reaction.P + [I])])
+										centroidX = np.average([centerX, I.pos[0]])
+										centroidY = np.average([centerY, I.pos[1]])
+
+										disCentroidSI = np.sqrt((centroidSX - I.center[0])**2 + (centroidSY - I.center[1])**2) * 8
+										disCentroidPI = np.sqrt((centroidPX - I.center[0])**2 + (centroidPY - I.center[1])**2) * 8
+										disCentroidI = np.sqrt((centroidX - I.center[0])**2 + (centroidY - I.center[1])**2) / 64
+
+										sumOfDis = disCentroidSI + disCentroidPI + disCentroidI
+
+
+
+
+										if I in reaction.S or I in reaction.P: 
+
+											vectXmiddle = I.pos[0]+(centerX - I.pos[0])*4/5
+											vectYmiddle = I.pos[1]+(centerY - I.pos[1])*4/5
+
+											vectX = centerX - vectXmiddle
+											vectY = centerY - vectYmiddle
+
+											middlePointX = -3*vectY + vectXmiddle #In here i'm taking the perpendicular of vect
+											middlePointY = 3*vectX + vectYmiddle
+
+											disX = centerX - middlePointX
+											disY = centerY - middlePointY
+											beta = np.arctan2(disY,disX)											
+											toX = centerX-20*np.cos(beta)
+											toY = centerY-20*np.sin(beta) 
+
+											bezzier = self.parent.computeBezier([I.center[0],I.center[1]],[middlePointX,middlePointY],[toX,toY],0.5)
+											iBoxPointX = bezzier[2]
+											iBoxPointY = bezzier[3]
+										
+										else:
+											disX = centerX - centroidX
+											disY = centerY - centroidY
+											beta = np.arctan2(disY,disX)											
+											toX = centerX-20*np.cos(beta)
+											toY = centerY-20*np.sin(beta) 
+
+											middlePointX = (centroidSX*disCentroidSI + centroidPX*disCentroidPI + centroidX*disCentroidI)/sumOfDis
+											middlePointY = (centroidSY*disCentroidSI + centroidPY*disCentroidPI + centroidY*disCentroidI)/sumOfDis
+											iBoxPointX = middlePointX
+											iBoxPointY = middlePointY
+
+										#middlePointX = centroidSX if disCentroidSI < disCentroidPI else centroidPX
+										#middlePointY = centroidSY if disCentroidSI < disCentroidPI else centroidPY
+
+										lineInhibitionPos = 1
+
+										reaction.iBoxes[iBoxesPos].myInhibitionLines.children[lineInhibitionPos].bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY)
+										
+										lineInhibitionPos += 2
+
+										myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
+										reaction.iBoxes[iBoxesPos].myInhibitionLines.children[lineInhibitionPos].points = myPoints
+
+										lineInhibitionPos += 2									
+
+
+										reaction.iBoxes[iBoxesPos].pos = (int(iBoxPointX - reaction.width/2), int(iBoxPointY - reaction.height/2)) #Assuming inhibition order does not change
+										iBoxesPos += 1
+
+										# toX = centerX-30*np.cos(beta)
+										# toY = centerY-30*np.sin(beta)
+										
+										# myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
+										# reaction.myInhibitionLines.children[lineInhibitionPos].points = myPoints
+										# lineInhibitionPos += 2
+
+				except AttributeError as e:
+					print('WARNING: '+str(e))
 
 		except AttributeError as e:
 			print('WARNING: Moved while deleting. Details: '+str(e))
-
-	def updateReactions(self):
-		try:		
-
-			for reaction in self.parent.reactions:
-				for moved in (reaction.S + reaction.P + reaction.I):
-					if moved == self:
-						
-						centroidX = np.average([element.center[0] for element in (reaction.S + reaction.P)])
-						centroidY = np.average([element.center[1] for element in (reaction.S + reaction.P)])
-						centroidSX = np.average([element.center[0] for element in reaction.S])
-						centroidSY = np.average([element.center[1] for element in reaction.S])
-						centroidPX = np.average([element.center[0] for element in reaction.P])
-						centroidPY = np.average([element.center[1] for element in reaction.P])
-
-						reaction.boxPosition = (int(centroidX),int(centroidY))
-
-						linePos = 1
-
-						for S in reaction.S:
-							reaction.myLines.children[linePos].bezier = (S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY)
-							reaction.myLines.children[linePos].width = defaultWidth*(S.size[0]/defaultNodeSize[0])
-							linePos += 2
-
-						for P in reaction.P:
-							reaction.myLines.children[linePos].bezier = (centroidX,centroidY,centroidPX,centroidPY,P.center[0],P.center[1])
-							reaction.myLines.children[linePos].width = defaultWidth*(S.size[0]/defaultNodeSize[0])
-							linePos += 2
-
-							arrowPos = np.sqrt((P.center[0] - centroidX)**2 + (P.center[1] - centroidY)**2)
-							arrowPos = arrowPos/(arrowPos + 50)
-
-							if len(reaction.P) == 1:
-								arrowPos = 0.4
-
-							fromPointX,fromPointY,toPointX,toPointY = self.parent.computeBezier([centroidX,centroidY],[centroidPX,centroidPY],P.center,arrowPos)
-
-							arrowSize = defaultArrowSize*(P.size[0]/defaultNodeSize[0])
-							myPoints = self.parent.returnPoints(fromPointX,fromPointY,toPointX,toPointY,arrowSize,arrowSize/4)
-							reaction.myLines.children[linePos].points=myPoints
-							linePos += 2
-
-							arrowPos -= 0.2
-							fromPointX,fromPointY,toPointX,toPointY = self.parent.computeBezier([centroidX,centroidY],[centroidPX,centroidPY],P.center,arrowPos)
-							myPoints = self.parent.returnPoints(fromPointX,fromPointY,toPointX,toPointY,arrowSize,arrowSize/4)
-							reaction.myLines.children[linePos].points=myPoints
-							linePos += 2
-
-						centerX = centroidX
-						centerY = centroidY
-
-						
-						iBoxesPos = 0
-
-						if reaction.iBoxes:
-							for I in reaction.I:
-
-								centroidSX = np.average([element.center[0] for element in (reaction.S + [I])])
-								centroidSY = np.average([element.center[1] for element in (reaction.S + [I])])
-								centroidPX = np.average([element.center[0] for element in (reaction.P + [I])])
-								centroidPY = np.average([element.center[1] for element in (reaction.P + [I])])
-								centroidX = np.average([centerX, I.pos[0]])
-								centroidY = np.average([centerY, I.pos[1]])
-
-								disCentroidSI = np.sqrt((centroidSX - I.center[0])**2 + (centroidSY - I.center[1])**2) * 8
-								disCentroidPI = np.sqrt((centroidPX - I.center[0])**2 + (centroidPY - I.center[1])**2) * 8
-								disCentroidI = np.sqrt((centroidX - I.center[0])**2 + (centroidY - I.center[1])**2) / 64
-
-								sumOfDis = disCentroidSI + disCentroidPI + disCentroidI
-
-
-
-
-								if I in reaction.S or I in reaction.P: 
-
-									vectXmiddle = I.pos[0]+(centerX - I.pos[0])*4/5
-									vectYmiddle = I.pos[1]+(centerY - I.pos[1])*4/5
-
-									vectX = centerX - vectXmiddle
-									vectY = centerY - vectYmiddle
-
-									middlePointX = -3*vectY + vectXmiddle #In here i'm taking the perpendicular of vect
-									middlePointY = 3*vectX + vectYmiddle
-
-									disX = centerX - middlePointX
-									disY = centerY - middlePointY
-									beta = np.arctan2(disY,disX)											
-									toX = centerX-20*np.cos(beta)
-									toY = centerY-20*np.sin(beta) 
-
-									bezzier = self.parent.computeBezier([I.center[0],I.center[1]],[middlePointX,middlePointY],[toX,toY],0.5)
-									iBoxPointX = bezzier[2]
-									iBoxPointY = bezzier[3]
-								
-								else:
-									disX = centerX - centroidX
-									disY = centerY - centroidY
-									beta = np.arctan2(disY,disX)											
-									toX = centerX-20*np.cos(beta)
-									toY = centerY-20*np.sin(beta) 
-
-									middlePointX = (centroidSX*disCentroidSI + centroidPX*disCentroidPI + centroidX*disCentroidI)/sumOfDis
-									middlePointY = (centroidSY*disCentroidSI + centroidPY*disCentroidPI + centroidY*disCentroidI)/sumOfDis
-									iBoxPointX = middlePointX
-									iBoxPointY = middlePointY
-
-								#middlePointX = centroidSX if disCentroidSI < disCentroidPI else centroidPX
-								#middlePointY = centroidSY if disCentroidSI < disCentroidPI else centroidPY
-
-								lineInhibitionPos = 1
-
-								reaction.iBoxes[iBoxesPos].myInhibitionLines.children[lineInhibitionPos].bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY)
-								
-								lineInhibitionPos += 2
-
-								inhibitionH = defaultInhibitionH*(I.size[0]/defaultNodeSize[0])
-								inhibitionW = defaultInhibitionW*(I.size[0]/defaultNodeSize[0])
-								myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,inhibitionH,inhibitionW)
-								reaction.iBoxes[iBoxesPos].myInhibitionLines.children[lineInhibitionPos].points = myPoints
-
-								lineInhibitionPos += 2									
-
-
-								reaction.iBoxes[iBoxesPos].pos = (int(iBoxPointX - reaction.width/2), int(iBoxPointY - reaction.height/2)) #Assuming inhibition order does not change
-								iBoxesPos += 1
-
-								# toX = centerX-30*np.cos(beta)
-								# toY = centerY-30*np.sin(beta)
-								
-								# myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
-								# reaction.myInhibitionLines.children[lineInhibitionPos].points = myPoints
-								# lineInhibitionPos += 2
-		except AttributeError as e:
-			print('WARNING: '+str(e))
 
 	def on_touch_up(self, touch):
 		try:
@@ -1072,7 +953,7 @@ class Reaction(Label):
 
 	def on_touch_down(self, touch):	
 
-		if self.collide_point(*touch.pos) and touch.button == 'left':
+		if self.collide_point(*touch.pos):
 
 			if self.parent.deletingNodes:
 
@@ -1155,12 +1036,10 @@ class Reaction(Label):
 								self.iBoxes.append(InhibitionPropierties(reaction = self, I = I, pos = (int(iBoxPointX - self.width/2), int(iBoxPointY - self.height/2))))
 								self.parent.add_widget(self.iBoxes[-1])
 
-								self.iBoxes[-1].myInhibitionLines.add(Line(bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY),width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
-
-								inhibitionH = defaultInhibitionH*(I.size[0]/defaultNodeSize[0])
-								inhibitionW = defaultInhibitionW*(I.size[0]/defaultNodeSize[0])							
-								myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,inhibitionH,inhibitionW)
-								self.iBoxes[-1].myInhibitionLines.add(Line(points=(myPoints), width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
+								self.iBoxes[-1].myInhibitionLines.add(Line(bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY),width = 2))
+							
+								myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
+								self.iBoxes[-1].myInhibitionLines.add(Line(points=(myPoints), width = 2))
 
 								# toX = centerX-30*np.cos(beta)
 								# toY = centerY-30*np.sin(beta)
@@ -1284,7 +1163,7 @@ class mySettings(Settings):
 class mySettingTitle(Label):  
     title = Label.text
 
-class EnzymeDynamicsNewApp(App): 
+class EnzymeDynamicsApp(App): 
 	icon = 'img/ico.png'
 	title = 'Enzyme Dynamics'
 	settings_cls = mySettings
@@ -1295,9 +1174,8 @@ class EnzymeDynamicsNewApp(App):
 			setattr(self.root.children[0].ids.myNodeCanvas,key,float(value))
 
 	def build(self):
-		#root = Builder.load_file('enzymedynamics.kv')
 		#self.use_kivy_settings = False
-		return MyScreenManager() #root
+		return MyScreenManager()
 
 	def build_config(self,config):
 		config.setdefaults('ODEsettings',{
@@ -1324,4 +1202,4 @@ class EnzymeDynamicsNewApp(App):
 			print(key,value)
 
 if __name__ == "__main__":
-	EnzymeDynamicsNewApp().run()
+	EnzymeDynamicsApp().run()
