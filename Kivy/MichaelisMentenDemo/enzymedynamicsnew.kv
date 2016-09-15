@@ -194,6 +194,34 @@
 		    Button:
 		    	background_color: 255,255,255,1
 		    	font_size: 15
+		    	#size_hint: .2, 1
+		    	text: 'Save'
+				color: 0,0,0,1
+		    	on_release: myNodeCanvas.saveData()
+				canvas.before:
+					Color:
+						rgba: 176/255, 190/255, 197/255, 1
+					Rectangle:
+			            pos: self.pos[0] - 2, self.pos[1] - 2
+			            size: self.width + 4, self.height + 4
+
+		    Button:
+		    	background_color: 255,255,255,1
+		    	font_size: 15
+		    	#size_hint: .2, 1
+		    	text: 'Load'
+				color: 0,0,0,1
+		    	on_release: myNodeCanvas.openData()
+				canvas.before:
+					Color:
+						rgba: 176/255, 190/255, 197/255, 1
+					Rectangle:
+			            pos: self.pos[0] - 2, self.pos[1] - 2
+			            size: self.width + 4, self.height + 4
+
+		    Button:
+		    	background_color: 255,255,255,1
+		    	font_size: 15
 		    	size_hint: 1, 2
 		    	text: 'Solve'
 		    	color: 0,0,0,1
@@ -241,15 +269,15 @@
 	    		source: 'img/backgroundThing.png'	
 	    		color: root.contextColor 	
 
-		    # Image:
-		    # 	#size: self.parent.width/2, self.parent.height/2
-		    # 	size_hint: (.2, .2)
-		    # 	pos_hint: {'center_x': .4, 'y': .45}
-		    # 	allow_stretch: False
-		    # 	keep_ratio: True
-	    	# 	source: 'img/ico.png'	
-	    	# 	color: root.contextColor
-	    	# 	mipmap: True
+		    Image:
+		    	#size: self.parent.width/2, self.parent.height/2
+		    	size_hint: (.3, .3)
+		    	pos_hint: {'center_x': .4, 'y': .4}
+		    	allow_stretch: False
+		    	keep_ratio: True
+	    		source: 'img/ico.png'	
+	    		color: root.contextColor[0], root.contextColor[1], root.contextColor[2], 0.1
+	    		mipmap: True
 
 		    Image:
 		    	#size: self.parent.width/2, self.parent.height/2
@@ -448,6 +476,32 @@
         	size: self.width + 6, self.height + 6
         	pos: self.pos[0] - 3, self.pos[1] - 3
 
+<OpenDataPopup>:
+	title: 'Load schematic'
+	title_color: 0,0,0,1
+	title_size: 15
+	background: str([1, 1, 1, 1])
+	size_hint: .6,None
+	canvas.before:
+		Color:
+			rgba: 0,0,0,1
+		Rectangle:
+        	size: self.width + 6, self.height + 6
+        	pos: self.pos[0] - 3, self.pos[1] - 3
+
+<SaveDataPopup>:
+	title: 'Save schematic'
+	title_color: 0,0,0,1
+	title_size: 15
+	background: str([1, 1, 1, 1])
+	size_hint: .6,None
+	canvas.before:
+		Color:
+			rgba: 0,0,0,1
+		Rectangle:
+        	size: self.width + 6, self.height + 6
+        	pos: self.pos[0] - 3, self.pos[1] - 3
+
 <Reaction>:
 	text: self.boxText
 	font_size: 15 #int(15*(self.P[0].size[0]/defaultNodeSize[0])) #Does not update
@@ -502,3 +556,4 @@
 #     font_size: '15sp'
 #     bold: True
 #     halign: 'center'
+

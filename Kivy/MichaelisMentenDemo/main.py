@@ -29,8 +29,12 @@ from kivy.input.motionevent import MotionEvent
 import matplotlib.pyplot as plt
 import inspect
 import random
+import json
 import copy
+import os
 import numpy as np
+import requests
+
 from functools import partial
 
 #Constants
@@ -166,6 +170,184 @@ class NodeCanvas(FloatLayout):
 		self.canvas.before.add(self.gridColor)
 		self.canvas.before.add(self.grid)
 		self.gridAdded = True
+
+	def saveData(self):
+
+		
+		data = {'compounds': [], 'reactions': [] }
+
+		compoundData = {'pos':[],'size':[],'name':[],'c':[],'special':[],'fillColor':[],'totalC':[], 'myId':[]}
+		reactionData = {'myId':[],'boxPosition':[],'boxText':[],'linkColor':[],'enzyme':[],'km':[],'vMax':[],'iBoxes':[],'I_ids':[],'S_ids':[],'P_ids':[]}
+		iBoxData = {'I_ids':[],'ki':[],'rType':[],'iBoxText':[],'reaction_ids':[]}
+
+		for compound in self.compounds:
+			for key in compoundData:
+				compoundData[key] = getattr(compound, key)
+			data['compounds'].append(copy.copy(compoundData))
+
+		for reaction in self.reactions:
+			for key in reactionData:
+				if key == 'iBoxes':
+					for I in reaction.I: #Since the ibox is solely specified by its inhibitor
+						for iBox in reaction.iBoxes:			
+							if I == iBox.I:
+								for key in iBoxData:
+									if key == 'reaction_ids':
+										iBoxData['reaction_ids'] = copy.copy(reaction.myId)
+									elif key == 'I_ids':
+										iBoxData['I_ids'] = I.myId
+									else:
+										iBoxData[key] = getattr(iBox, key)
+								reactionData['iBoxes'].append(copy.copy(iBoxData))
+
+				elif key == 'I_ids':
+					reactionData['I_ids'].clear()
+					for I in reaction.I:
+						reactionData['I_ids'].append(I.myId)
+
+				elif key == 'S_ids':
+					reactionData['S_ids'].clear()
+					for S in reaction.S:
+						print(S.myId)
+						print('#######')
+						reactionData['S_ids'].append(S.myId)
+
+				elif key == 'P_ids':
+					reactionData['P_ids'].clear()
+					for P in reaction.P:
+						reactionData['P_ids'].append(P.myId)
+				else:
+					reactionData[key] = getattr(reaction, key)
+
+			data['reactions'].append(copy.deepcopy(reactionData))
+
+		print(data['reactions'])
+
+		box = BoxLayout()
+
+		text = ['_']
+
+		def on_nameText(text, instance, value):
+
+			text.append(value) #To pass by reference (4 sure there is a better way)
+
+		def on_dissmissMyPoup(*args):
+
+			if text[-1] == '':
+				text[-1] = 'Default'
+
+			with open('saved/' + text[-1] + '.json', 'w') as outfile:
+				json.dump(data, outfile)
+
+			myPopup.dismiss()
+
+		inputName = TextInput(hint_text='Name',multiline=False)
+		inputName.bind(text=partial(on_nameText,text))
+		box.add_widget(inputName)
+
+		btn1 = Button(text='Save')
+		box.add_widget(btn1)
+		myPopup = SaveDataPopup(content = box, auto_dismiss=False)
+		btn1.bind(on_press = on_dissmissMyPoup)
+
+		myPopup.open()		
+
+
+
+	def openData(self):
+
+		box = BoxLayout()
+
+		database_url = 'https://rawgit.com/polybiome/database/master/database.txt'
+		optionsCloud = requests.get(database_url)
+		optionsCloud = optionsCloud.content
+		optionsCloud = optionsCloud.decode().split(',')
+
+		optionsLocal = os.listdir("saved/")
+
+		def on_selectCloud(instance, value):
+			url = 'https://rawgit.com/polybiome/database/master/' + str(value)
+			r = requests.get(url.rstrip())
+			data = json.loads(r.text)
+			self.loadData(data)
+			myPopup.dismiss()
+
+		def on_selectLocal(instance, value):
+			with open('saved/' + value, 'r') as fp:
+				data = json.load(fp)
+				self.loadData(data)
+				myPopup.dismiss()
+
+		spinnerCloud = Spinner(text='Select predefined:',values=optionsCloud, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
+
+		spinnerLocal = Spinner(text='Select custom:',values=optionsLocal, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
+
+		spinnerCloud.bind(text=on_selectCloud)
+		spinnerLocal.bind(text=on_selectLocal)
+
+		box.add_widget(spinnerCloud)
+		box.add_widget(spinnerLocal)
+
+		btn1 = Button(text='Cancel')
+		box.add_widget(btn1)
+		myPopup = OpenDataPopup(content = box, auto_dismiss=False)
+		btn1.bind(on_press = myPopup.dismiss)
+
+		myPopup.open()
+
+	def loadData(self,data):
+
+		for compound in data['compounds']:
+			self.compounds.append(GraphNode(size_hint=(None,None)))
+			for key in compound:
+				setattr(self.compounds[-1], key, compound[key])
+			self.add_widget(self.compounds[-1])
+			self.compounds[-1].size = self.compounds[0].size if self.compounds else defaultNodeSize
+
+		for reaction in data['reactions']:
+			self.reactions.append(Reaction())
+			self.add_widget(self.reactions[-1])
+			for key in reaction:
+
+				if key == 'I_ids':
+					for I_id in reaction['I_ids']:
+						for compound in self.compounds:
+							if compound.myId == I_id:
+								self.reactions[-1].I.append(compound)	
+
+				if key == 'S_ids':
+					for S_id in reaction['S_ids']:
+						for compound in self.compounds:
+							if compound.myId == S_id:
+								self.reactions[-1].S.append(compound)
+
+				elif key == 'P_ids':
+					for P_id in reaction['P_ids']:
+						for compound in self.compounds:
+							if compound.myId == P_id:
+								self.reactions[-1].P.append(compound)
+
+				elif not key == 'iBoxes':
+					setattr(self.reactions[-1], key, reaction[key])
+
+			for iBox in reaction['iBoxes']:
+				for myReaction in self.reactions:
+					if myReaction.myId == iBox['reaction_ids']:
+						myReaction.iBoxes.append(InhibitionPropierties(reaction = myReaction))
+						self.add_widget(self.reactions[-1].iBoxes[-1])
+
+				for compound in self.compounds:
+					if compound.myId == iBox['I_ids']:
+						self.reactions[-1].iBoxes[-1].I = compound
+
+				for key in iBox:
+					if not key == 'reaction_ids' and not key == 'I_ids':
+						setattr(self.reactions[-1].iBoxes[-1], key, iBox[key])
+
+				self.reactions[-1].createInhibitionLines(self.reactions[-1].iBoxes[-1].I)
+
+			
+			self.createReactionLines(self.reactions[-1].S,self.reactions[-1].P)
 
 	def on_clickedS(self,*args):
 
@@ -373,8 +555,7 @@ class NodeCanvas(FloatLayout):
 					if compound.special == 'sourceSink':
 						for k in range(5):
 							compound.specialEffectSize[k] = [(compound.size[0] * (1+np.sin(self.timeClock2 - k*specialEffectDelay)))/2,(compound.size[1] * (1+np.sin(self.timeClock2 - k*specialEffectDelay)))/2]#-k*specialEffectDelay)
-
-										
+					
 	def buttonBehaviour(self):
 		if not self.settingS and not self.settingP and not self.deletingNodes and len(self.compounds) > 1:
 			NodeCanvas.blocked = True
@@ -428,29 +609,40 @@ class NodeCanvas(FloatLayout):
 		# 	element.canvas.remove(element.canvas.children[-1]) #Ellipsis(deprecated)
 
 		if self.clickedS and self.clickedP:
-
 			self.reactions.append(Reaction(S = self.clickedS,P = self.clickedP))
 			self.add_widget(self.reactions[-1])
+			self.createReactionLines(self.clickedS,self.clickedP)
 
-			centroidX = np.average([element.center[0] for element in (self.clickedS + self.clickedP)])
-			centroidY = np.average([element.center[1] for element in (self.clickedS + self.clickedP)])
-			centroidSX = np.average([element.center[0] for element in (self.clickedS)])
-			centroidSY = np.average([element.center[1] for element in (self.clickedS)])
-			centroidPX = np.average([element.center[0] for element in (self.clickedP)])
-			centroidPY = np.average([element.center[1] for element in (self.clickedP)])
+			self.setReactionData(self.reactions[-1])
+
+			for element in (self.clickedS + self.clickedP):
+				element.changeFillColor()
+
+		self.onCchange()
+		self.clickedS.clear()
+		self.clickedP.clear()
+		#self.printCompounds()
+		self.printReactions()
+
+	def createReactionLines(self,clickedS,clickedP):
+			centroidX = np.average([element.center[0] for element in (clickedS + clickedP)])
+			centroidY = np.average([element.center[1] for element in (clickedS + clickedP)])
+			centroidSX = np.average([element.center[0] for element in (clickedS)])
+			centroidSY = np.average([element.center[1] for element in (clickedS)])
+			centroidPX = np.average([element.center[0] for element in (clickedP)])
+			centroidPY = np.average([element.center[1] for element in (clickedP)])
 
 			self.reactions[-1].boxPosition = (int(centroidX),int(centroidY))
 
-			for S in self.clickedS:
+			for S in clickedS:
 				self.reactions[-1].myLines.add(Line(bezier=(S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY),width = defaultWidth*(S.size[0]/defaultNodeSize[0])))
 
-			for P in self.clickedP:
+			for P in clickedP:
 				self.reactions[-1].myLines.add(Line(bezier=(centroidX,centroidY,centroidPX,centroidPY,P.center[0],P.center[1]), width = defaultWidth*(P.size[0]/defaultNodeSize[0])))
 				
-
 				arrowPos = np.sqrt((P.center[0] - centroidX)**2 + (P.center[1] - centroidY)**2)
 				arrowPos = arrowPos/(arrowPos + 50)
-				if len(self.clickedP) == 1:
+				if len(clickedP) == 1:
 					arrowPos = 0.4
 				fromPointX,fromPointY,toPointX,toPointY = self.computeBezier([centroidX,centroidY],[centroidPX,centroidPY],P.center,arrowPos)
 				myPoints = self.returnPoints(fromPointX,fromPointY,toPointX,toPointY,0,0)
@@ -467,17 +659,6 @@ class NodeCanvas(FloatLayout):
 				self.reactions[-1].linkColor[2],
 				self.reactions[-1].linkColor[3]))
 			self.canvas.before.add(self.reactions[-1].myLines)
-
-			self.setReactionData(self.reactions[-1])
-
-			for element in (self.clickedS + self.clickedP):
-				element.changeFillColor()
-
-		self.onCchange()
-		self.clickedS.clear()
-		self.clickedP.clear()
-		#self.printCompounds()
-		self.printReactions()
 
 	def changeText(self,reaction):
 		if len(reaction.S + reaction.P) == 2:
@@ -827,6 +1008,10 @@ class GraphNode(Label):
 	def __ne__(self, other):
 		return not(self == other)
 
+	def __init__(self, **kwargs):
+		super(GraphNode, self).__init__(**kwargs)
+		self.myId = random.random()  #For saving and exporting without singular names
+
 	def changeFillColor(self):
 
 		for k in range(0,3): #This averages colors. Do I have to check all reactions? (Could be optimized)
@@ -837,7 +1022,10 @@ class GraphNode(Label):
 				print('WARNING: Division by zero when setting color')
 
 	def on_c(self, instance, value):
-		self.parent.onCchange()
+		try:
+			self.parent.onCchange()
+		except  AttributeError as e:
+			print('WARNING: Error updating total concentration. Details: '+str(e))
 
 	def on_deletingNodes(self, *args):
 
@@ -1064,13 +1252,14 @@ class Reaction(Label):
 		super(Reaction,self).__init__(**kwargs)
 		self.myLines = InstructionGroup()
 		self.linkColor = [random.random()/2+0.5,random.random()/2+0.5,random.random()/2+0.5,1]
+		self.myId = random.random()  #For saving and exporting without singular names
 
 	def isclicked(self,touch):
 		if self.collide_point(*touch.pos):
 			return True
 		return False
 
-	def on_touch_down(self, touch):	
+	def on_touch_down(self, touch):	 #Creates Inhibition
 
 		if self.collide_point(*touch.pos) and touch.button == 'left':
 
@@ -1089,90 +1278,16 @@ class Reaction(Label):
 
 					if self.parent.clickedS:
 
-						# for element in self.parent.clickedS: #Ellipsis (deprecated)
-						# 	element.canvas.remove(element.canvas.children[-1])
-						centerX = np.average([element.center[0] for element in (self.S + self.P)])
-						centerY = np.average([element.center[1] for element in (self.S + self.P)])
-
 						for I in reversed(self.parent.clickedS):
 
 							if I not in self.I:
 
 								self.I.append(I)
 
-								centroidSX = np.average([element.center[0] for element in (self.S + [I])])
-								centroidSY = np.average([element.center[1] for element in (self.S + [I])])
-								centroidPX = np.average([element.center[0] for element in (self.P + [I])])
-								centroidPY = np.average([element.center[1] for element in (self.P + [I])])
-								centroidX = np.average([centerX, I.pos[0]])
-								centroidY = np.average([centerY, I.pos[1]])
-
-								disCentroidSI = np.sqrt((centroidSX - I.center[0])**2 + (centroidSY - I.center[1])**2) * 8
-								disCentroidPI = np.sqrt((centroidPX - I.center[0])**2 + (centroidPY - I.center[1])**2) * 8
-								disCentroidI = np.sqrt((centroidX - I.center[0])**2 + (centroidY - I.center[1])**2) / 64
-
-								sumOfDis = disCentroidSI + disCentroidPI + disCentroidI
-
-								disX = centerX - centroidX
-								disY = centerY - centroidY
-								beta = np.arctan2(disY,disX)
-								toX = centerX-20*np.cos(beta)
-								toY = centerY-20*np.sin(beta)
-
-								if I in self.S or I in self.P: 
-
-									vectXmiddle = I.pos[0]+(centerX - I.pos[0])*4/5
-									vectYmiddle = I.pos[1]+(centerY - I.pos[1])*4/5
-
-									vectX = centerX - vectXmiddle
-									vectY = centerY - vectYmiddle
-
-									middlePointX = -3*vectY + vectXmiddle #In here i'm taking the perpendicular of vect
-									middlePointY = 3*vectX + vectYmiddle
-
-									disX = centerX - middlePointX
-									disY = centerY - middlePointY
-									beta = np.arctan2(disY,disX)											
-									toX = centerX-20*np.cos(beta)
-									toY = centerY-20*np.sin(beta) 
-
-									bezzier = self.parent.computeBezier([I.center[0],I.center[1]],[middlePointX,middlePointY],[toX,toY],0.5)
-									iBoxPointX = bezzier[2]
-									iBoxPointY = bezzier[3]
-								
-								else:
-									disX = centerX - centroidX
-									disY = centerY - centroidY
-									beta = np.arctan2(disY,disX)											
-									toX = centerX-20*np.cos(beta)
-									toY = centerY-20*np.sin(beta)
-									middlePointX = (centroidSX*disCentroidSI + centroidPX*disCentroidPI + centroidX*disCentroidI)/sumOfDis
-									middlePointY = (centroidSY*disCentroidSI + centroidPY*disCentroidPI + centroidY*disCentroidI)/sumOfDis
-									iBoxPointX = middlePointX
-									iBoxPointY = middlePointY
-
-
-								self.iBoxes.append(InhibitionPropierties(reaction = self, I = I, pos = (int(iBoxPointX - self.width/2), int(iBoxPointY - self.height/2))))
+								self.iBoxes.append(InhibitionPropierties(reaction = self, I = I))
 								self.parent.add_widget(self.iBoxes[-1])
 
-								self.iBoxes[-1].myInhibitionLines.add(Line(bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY),width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
-
-								inhibitionH = defaultInhibitionH*(I.size[0]/defaultNodeSize[0])
-								inhibitionW = defaultInhibitionW*(I.size[0]/defaultNodeSize[0])							
-								myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,inhibitionH,inhibitionW)
-								self.iBoxes[-1].myInhibitionLines.add(Line(points=(myPoints), width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
-
-								# toX = centerX-30*np.cos(beta)
-								# toY = centerY-30*np.sin(beta)
-					
-								# myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
-								# self.myInhibitionLines.add(Line(points=(myPoints), width = 2))				
-
-								self.parent.canvas.before.add(Color(self.linkColor[0]-0.12,
-								self.linkColor[1]-0.12,
-								self.linkColor[2]-0.2,
-								self.linkColor[3]))						
-								self.parent.canvas.before.add(self.iBoxes[-1].myInhibitionLines)
+								self.createInhibitionLines(I)
 
 								self.parent.setInhibitionData(self.iBoxes[-1])
 
@@ -1183,6 +1298,83 @@ class Reaction(Label):
 					self.parent.clickedS.clear()
 					self.parent.clickedP.clear()
 
+	def createInhibitionLines(self,I):
+
+		centerX = np.average([element.center[0] for element in (self.S + self.P)]) #Could be computed once (for all I), but loading code becomes larger
+		centerY = np.average([element.center[1] for element in (self.S + self.P)]) #Could be computed once (for all I), but loading code becomes larger
+
+		centroidSX = np.average([element.center[0] for element in (self.S + [I])])
+		centroidSY = np.average([element.center[1] for element in (self.S + [I])])
+		centroidPX = np.average([element.center[0] for element in (self.P + [I])])
+		centroidPY = np.average([element.center[1] for element in (self.P + [I])])
+		centroidX = np.average([centerX, I.pos[0]])
+		centroidY = np.average([centerY, I.pos[1]])
+
+		disCentroidSI = np.sqrt((centroidSX - I.center[0])**2 + (centroidSY - I.center[1])**2) * 8
+		disCentroidPI = np.sqrt((centroidPX - I.center[0])**2 + (centroidPY - I.center[1])**2) * 8
+		disCentroidI = np.sqrt((centroidX - I.center[0])**2 + (centroidY - I.center[1])**2) / 64
+
+		sumOfDis = disCentroidSI + disCentroidPI + disCentroidI
+
+		disX = centerX - centroidX
+		disY = centerY - centroidY
+		beta = np.arctan2(disY,disX)
+		toX = centerX-20*np.cos(beta)
+		toY = centerY-20*np.sin(beta)
+
+		if I in self.S or I in self.P: 
+
+			vectXmiddle = I.pos[0]+(centerX - I.pos[0])*4/5
+			vectYmiddle = I.pos[1]+(centerY - I.pos[1])*4/5
+
+			vectX = centerX - vectXmiddle
+			vectY = centerY - vectYmiddle
+
+			middlePointX = -3*vectY + vectXmiddle #In here i'm taking the perpendicular of vect
+			middlePointY = 3*vectX + vectYmiddle
+
+			disX = centerX - middlePointX
+			disY = centerY - middlePointY
+			beta = np.arctan2(disY,disX)											
+			toX = centerX-20*np.cos(beta)
+			toY = centerY-20*np.sin(beta) 
+
+			bezzier = self.parent.computeBezier([I.center[0],I.center[1]],[middlePointX,middlePointY],[toX,toY],0.5)
+			iBoxPointX = bezzier[2]
+			iBoxPointY = bezzier[3]
+		
+		else:
+			disX = centerX - centroidX
+			disY = centerY - centroidY
+			beta = np.arctan2(disY,disX)											
+			toX = centerX-20*np.cos(beta)
+			toY = centerY-20*np.sin(beta)
+			middlePointX = (centroidSX*disCentroidSI + centroidPX*disCentroidPI + centroidX*disCentroidI)/sumOfDis
+			middlePointY = (centroidSY*disCentroidSI + centroidPY*disCentroidPI + centroidY*disCentroidI)/sumOfDis
+			iBoxPointX = middlePointX
+			iBoxPointY = middlePointY
+
+		self.iBoxes[-1].pos = (int(iBoxPointX - self.width/2), int(iBoxPointY - self.height/2))
+
+		self.iBoxes[-1].myInhibitionLines.add(Line(bezier=(I.center[0],I.center[1],middlePointX,middlePointY,toX,toY),width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
+
+		inhibitionH = defaultInhibitionH*(I.size[0]/defaultNodeSize[0])
+		inhibitionW = defaultInhibitionW*(I.size[0]/defaultNodeSize[0])							
+		myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,inhibitionH,inhibitionW)
+		self.iBoxes[-1].myInhibitionLines.add(Line(points=(myPoints), width = defaultWidth*(I.size[0]/defaultNodeSize[0])))
+
+		# toX = centerX-30*np.cos(beta)
+		# toY = centerY-30*np.sin(beta)
+
+		# myPoints = self.parent.returnPoints(middlePointX,middlePointY,toX,toY,0.1,5)
+		# self.myInhibitionLines.add(Line(points=(myPoints), width = 2))				
+
+		self.parent.canvas.before.add(Color(self.linkColor[0]-0.12,
+		self.linkColor[1]-0.12,
+		self.linkColor[2]-0.2,
+		self.linkColor[3]))						
+		self.parent.canvas.before.add(self.iBoxes[-1].myInhibitionLines)
+				
 class InhibitionPropierties(Label):
 	reaction = ObjectProperty()
 	I = ObjectProperty()
@@ -1259,7 +1451,13 @@ class InhibitionPopup(Popup):
 		NodeCanvas.blocked = True
 	def on_dismiss(self):
 		NodeCanvas.blocked = False	
-		
+
+class OpenDataPopup(Popup):
+	pass
+
+class SaveDataPopup(Popup):
+	pass
+	
 class MainMenu(Screen):
 	pass
 
