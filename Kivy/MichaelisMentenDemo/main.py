@@ -39,6 +39,8 @@ from functools import partial
 
 #Constants
 Window.fullscreen = False#'auto'
+Config.set('kivy', 'exit_on_escape', '0')
+Config.set("input", "mouse", "mouse,disable_multitouch")
 
 defaultFillColor = [0.9,0.9,0.9,0.5]
 defaultContextColor = [198/255,40/255,40/255,0.8]
