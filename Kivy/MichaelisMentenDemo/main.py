@@ -257,7 +257,7 @@ class NodeCanvas(FloatLayout):
 
 		box = BoxLayout()
 
-		database_url = 'https://rawgit.com/polybiome/PolyEnzime/master/database.txt'
+		database_url = 'https://rawgit.com/polybiome/database/master/database.txt'
 		optionsCloud = requests.get(database_url)
 		optionsCloud = optionsCloud.content
 		optionsCloud = optionsCloud.decode().split(',')
