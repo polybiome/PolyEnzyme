@@ -87,6 +87,7 @@ class NodeCanvas(FloatLayout):
 	timeClock2 = NumericProperty(0)
 	movingNode = BooleanProperty(False)
 	firstTouch = BooleanProperty(True)
+	secondInfo = BooleanProperty(True) 
 	gridAdded = BooleanProperty(False)
 	grid = ObjectProperty('Default')
 	gridColor = ObjectProperty('Default')
@@ -252,13 +253,11 @@ class NodeCanvas(FloatLayout):
 
 		myPopup.open()		
 
-
-
 	def openData(self):
 
 		box = BoxLayout()
 
-		database_url = 'https://rawgit.com/polybiome/database/master/database.txt'
+		database_url = 'https://rawgit.com/polybiome/PolyEnzime/master/database.txt'
 		optionsCloud = requests.get(database_url)
 		optionsCloud = optionsCloud.content
 		optionsCloud = optionsCloud.decode().split(',')
@@ -303,6 +302,9 @@ class NodeCanvas(FloatLayout):
 				setattr(self.compounds[-1], key, compound[key])
 			self.add_widget(self.compounds[-1])
 			self.compounds[-1].size = self.compounds[0].size if self.compounds else defaultNodeSize
+
+			if (self.compounds[-1].pos[0]) < self.pos[0]:
+				self.compounds[-1].pos[0] = self.pos[0]
 
 		for reaction in data['reactions']:
 			self.reactions.append(Reaction())
@@ -387,16 +389,23 @@ class NodeCanvas(FloatLayout):
 
 	def reactionCycle(self, dt):
 		for reaction in self.reactions:
-			if len(reaction.S + reaction.P) == 2:
+			if True:#len(reaction.S + reaction.P) == 2:
 				if not reaction.iBoxes:#all(x == 'none' for x in [ibox.rType for ibox in reaction.iBoxes]):
 					try:
-						if reaction.S[0].special == 'sourceSink':
-							v0 = reaction.vMax
-						else:
-							v0 = (reaction.vMax*reaction.S[0].c)/(reaction.km + reaction.S[0].c)
+						sMult = 1
+						for S in reaction.S:
+							sMult *= S.c
+						v0 = (reaction.vMax*sMult)/(reaction.km + sMult)
 
-						reaction.S[0].c += dt* -v0
-						reaction.P[0].c += dt* v0							
+						for S in reaction.S:
+							if S.special == 'sourceSink':
+								S.c += dt* -reaction.vMax
+							else:
+								S.c += dt* -v0
+
+						for P in reaction.P:
+							P.c += dt* v0	
+
 					except ZeroDivisionError as e:
 						print('WARNING: ' + str(e))
 				else:
@@ -408,17 +417,24 @@ class NodeCanvas(FloatLayout):
 						if ibox.rType == 'uc' or ibox.rType == 'nc':
 							unCompetitiveIhibition += ibox.I.c/ibox.ki
 					try:
-						if reaction.S[0].special == 'sourceSink':
-							v0 = reaction.vMax/(1 + unCompetitiveIhibition)
-						else:
-							v0 = (reaction.vMax*reaction.S[0].c)/(reaction.km*(1 + competitiveIhibition) + reaction.S[0].c*(1 + unCompetitiveIhibition))
+						sMult = 1
+						for S in reaction.S:
+							sMult *= S.c
+						v0 = (reaction.vMax*sMult)/(reaction.km*(1 + competitiveIhibition) + sMult*(1 + unCompetitiveIhibition))
 
-						reaction.S[0].c += dt* -v0
-						reaction.P[0].c += dt* v0
+						for S in reaction.S:
+							if S.special == 'sourceSink':
+								S.c += dt* -reaction.vMax/(1 + unCompetitiveIhibition)
+							else:
+								S.c += dt* -v0
+
+						for P in reaction.P:
+							P.c += dt* v0
 
 					except ZeroDivisionError as e:
 						print('WARNING: ' + str(e))
 			else:
+
 				print('ERROR: REACTION NOT SUPPORTED YET')
 
 	def solveSystem(self):
@@ -634,6 +650,19 @@ class NodeCanvas(FloatLayout):
 
 			self.reactions[-1].boxPosition = (int(centroidX),int(centroidY))
 
+			#Ensures no two boxes are superposed
+			for reaction in self.reactions[:-1]:
+				if np.sqrt((self.reactions[-1].boxPosition[0] - reaction.boxPosition[0])**2 + (self.reactions[-1].boxPosition[1] - reaction.boxPosition[1])**2) < 0.1:
+					
+					beta = np.arctan2(centroidSY-centroidPY,centroidSX-centroidPX)
+
+					reaction.boxPosition[0] -= int(np.sin(beta) * 50)
+					reaction.boxPosition[1] -= int(np.cos(beta) * 50)
+					
+					self.reactions[-1].boxPosition[0] += int(np.sin(beta) * 50)
+					self.reactions[-1].boxPosition[1] += int(np.cos(beta) * 50)
+			##
+
 			for S in clickedS:
 				self.reactions[-1].myLines.add(Line(bezier=(S.center[0],S.center[1],centroidSX,centroidSY,centroidX,centroidY),width = defaultWidth*(S.size[0]/defaultNodeSize[0])))
 
@@ -661,7 +690,7 @@ class NodeCanvas(FloatLayout):
 			self.canvas.before.add(self.reactions[-1].myLines)
 
 	def changeText(self,reaction):
-		if len(reaction.S + reaction.P) == 2:
+		if True:#len(reaction.S + reaction.P) == 2:
 			if reaction.enzyme == 'default':
 				reaction.boxText = 'km ' + "{0:0.1f}".format(reaction.km) + '\nVmax ' + "{0:0.1f}".format(reaction.vMax)
 			else:
@@ -672,8 +701,7 @@ class NodeCanvas(FloatLayout):
 	def setReactionData(self,reaction):
 
 		box = BoxLayout()	
-		if (len(reaction.S) == 1 and len(reaction.P) == 1): #A->B reaction
-			
+		if True:#(len(reaction.S) == 1 and len(reaction.P) == 1): #A->B reaction
 
 			def on_inputKm(instance, value):
 				try:
@@ -796,10 +824,10 @@ class NodeCanvas(FloatLayout):
 					#compound.pos[k] -= (touch.pos[k]-self.dFromClick[k])*0.1
 				
 	def on_touch_up(self, touch):
-		if touch.button == 'left':
-			if self.firstTouch:
+		if touch.button == 'left': 
+			if self.firstTouch: #This removes the information helpers
 				self.firstTouch = False
-				self.remove_widget(self.children[0]) #WARNING, BLIND SELECTION TO REMOVE ADVICE WIDGET
+				self.remove_widget(self.children[0]) #WARNING, BLIND SELECTION TO REMOVE ADVICE WIDGET	
 
 			if self.collide_point(*touch.pos) and not self.blocked and not self.deletingNodes and self.movingCanvas == '0':
 				for child in self.children:
@@ -1052,26 +1080,18 @@ class GraphNode(Label):
 
 				###CREATE REACTION###
 				elif self.parent.settingS:
-					#print('--Reaction clicked--')
 					if self not in self.parent.clickedS:
 						self.parent.clickedS.append(self)
-						# with self.canvas: #Ellipsis (deprecated)
-						# 	Color(0,0.3,0.5,0.3)
-						# 	Ellipse(size = self.size, pos = self.pos)
+
 					else:
 						self.parent.clickedS.remove(self)
-						#self.canvas.remove(self.canvas.children[-1]) #Ellipsis (deprecated)
 
 				elif self.parent.settingP:
 					if self not in self.parent.clickedS:
 						if self not in self.parent.clickedP:
 							self.parent.clickedP.append(self)
-							# with self.canvas: #Ellipsis (deprecated)
-							# 	Color(0.3,0,0.5,0.3)
-							# 	Ellipse(size = self.size, pos = self.pos)
 						else:
 							self.parent.clickedP.remove(self)
-							#self.canvas.remove(self.canvas.children[-1]) #Ellipsis (deprecated)
 
 	def on_touch_move(self, touch):
 		try:
@@ -1102,6 +1122,19 @@ class GraphNode(Label):
 						centroidPY = np.average([element.center[1] for element in reaction.P])
 
 						reaction.boxPosition = (int(centroidX),int(centroidY))
+
+						#Ensures no two boxes are superposed
+						for myreaction in self.parent.reactions:
+							if np.sqrt((reaction.boxPosition[0] - myreaction.boxPosition[0])**2 + (reaction.boxPosition[1] - myreaction.boxPosition[1])**2) < 0.1:
+								
+								beta = np.arctan2(centroidSY-centroidPY,centroidSX-centroidPX)
+
+								myreaction.boxPosition[0] -= int(np.sin(beta) * 50)
+								myreaction.boxPosition[1] -= int(np.cos(beta) * 50)
+								
+								reaction.boxPosition[0] += int(np.sin(beta) * 50)
+								reaction.boxPosition[1] += int(np.cos(beta) * 50)
+						##
 
 						linePos = 1
 
@@ -1238,7 +1271,7 @@ class GraphNode(Label):
 class Reaction(Label):
 	boxPosition = ListProperty([0,0])
 	boxText = StringProperty('')
-	linkColor = ListProperty()
+	linkColor = ListProperty([0,0,0,1])
 
 	enzyme = StringProperty('default')
 	km = NumericProperty(0.5)
@@ -1408,6 +1441,12 @@ class NodePopup(Popup):
 	def on_open(self):
 		NodeCanvas.blocked = True
 	def on_dismiss(self):
+		#WTF, THERE HAS TO BE A CLEANER WAY SOMEHOW
+		if self.parent.children[1].children[0].ids.myNodeCanvas.secondInfo:
+			myInitialInstructions2 = InitialInstructions2()
+			self.parent.children[1].children[0].ids.myNodeCanvas.add_widget(myInitialInstructions2) 
+			self.parent.children[1].children[0].ids.myNodeCanvas.firstTouch = True
+			self.parent.children[1].children[0].ids.myNodeCanvas.secondInfo = False
 		NodeCanvas.blocked = False	
 
 class ReactionHelper(BoxLayout):
@@ -1465,6 +1504,9 @@ class OptionsCanvas(BoxLayout):
 	pass
 
 class InitialInstructions(BoxLayout):
+	pass
+
+class InitialInstructions2(BoxLayout):
 	pass
 
 class MyScreenManager(ScreenManager):
