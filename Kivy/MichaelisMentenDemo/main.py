@@ -27,6 +27,8 @@ from kivy.input.motionevent import MotionEvent
 #from kivy.lang import Builder
 
 import matplotlib.pyplot as plt
+import tkinter
+import tkinter.filedialog
 import inspect
 import random
 import json
@@ -38,7 +40,9 @@ import requests
 from functools import partial
 
 #Constants
-Window.fullscreen = False#'auto'
+#Window.fullscreen = 1#'auto'#False#'auto'
+#Window.window_state = 'maximized'
+Config.set('graphics', 'window_state', 'maximized')
 Config.set('kivy', 'exit_on_escape', '0')
 Config.set("input", "mouse", "mouse,disable_multitouch")
 
@@ -175,7 +179,6 @@ class NodeCanvas(FloatLayout):
 		self.gridAdded = True
 
 	def saveData(self):
-
 		
 		data = {'compounds': [], 'reactions': [] }
 
@@ -395,18 +398,29 @@ class NodeCanvas(FloatLayout):
 				if not reaction.iBoxes:#all(x == 'none' for x in [ibox.rType for ibox in reaction.iBoxes]):
 					try:
 						sMult = 1
-						for S in reaction.S:
-							sMult *= S.c
-						v0 = (reaction.vMax*sMult)/(reaction.km + sMult)
-
+						hasSource = False
 						for S in reaction.S:
 							if S.special == 'sourceSink':
-								S.c += dt* -reaction.vMax
+								hasSource = True
 							else:
-								S.c += dt* -v0
+								sMult *= S.c
+						if sMult == 0:
+							v0 = 0
+						elif hasSource:
+							v0 = reaction.vMax
+						else:
+							v0 = (reaction.vMax*sMult)/(reaction.km + sMult)
+
+						for S in reaction.S:
+							if not S.special == 'sourceSink':
+								if S.c >= dt*v0:
+									S.c += dt*-v0
+								else:
+									S.c = 0 #Hard zero to allow the sMult==0 above
 
 						for P in reaction.P:
-							P.c += dt* v0	
+							if not P.special == 'sourceSink':
+								P.c += dt* v0	
 
 					except ZeroDivisionError as e:
 						print('WARNING: ' + str(e))
@@ -420,18 +434,30 @@ class NodeCanvas(FloatLayout):
 							unCompetitiveIhibition += ibox.I.c/ibox.ki
 					try:
 						sMult = 1
-						for S in reaction.S:
-							sMult *= S.c
-						v0 = (reaction.vMax*sMult)/(reaction.km*(1 + competitiveIhibition) + sMult*(1 + unCompetitiveIhibition))
-
+						hasSource = False
 						for S in reaction.S:
 							if S.special == 'sourceSink':
-								S.c += dt* -reaction.vMax/(1 + unCompetitiveIhibition)
-							else:
-								S.c += dt* -v0
+								hasSource = True
+							else:	
+								sMult *= S.c
+
+						if sMult == 0:
+							v0 = 0
+						elif hasSource:
+							v0 = reaction.vMax/(1 + unCompetitiveIhibition)
+						else:
+							v0 = (reaction.vMax*sMult)/(reaction.km*(1 + competitiveIhibition) + sMult*(1 + unCompetitiveIhibition))
+
+						for S in reaction.S:
+							if not S.special == 'sourceSink':
+								if S.c >= dt*v0:
+									S.c += dt*-v0
+								else:
+									S.c = 0
 
 						for P in reaction.P:
-							P.c += dt* v0
+							if not P.special == 'sourceSink':
+								P.c += dt* v0
 
 					except ZeroDivisionError as e:
 						print('WARNING: ' + str(e))
@@ -465,9 +491,10 @@ class NodeCanvas(FloatLayout):
 		sol = integrateODES(compounds,self.tmax,self.dt,self.resolution)
 
 		for obj, value in sol.items():
-			#fillColor = obj.fillColor[:-1]
-			#plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
-			plt.plot(t, value[:-1], label=obj.name, linewidth=3)
+			if not obj.special == 'sourceSink':
+				#fillColor = obj.fillColor[:-1]
+				#plt.plot(t, value[:-1], label=obj.name,color = fillColor, linewidth=3)
+				plt.plot(t, value[:-1], label=obj.name, linewidth=3)
 		
 		plt.legend(loc='best')
 		plt.xlabel('t')
@@ -576,7 +603,7 @@ class NodeCanvas(FloatLayout):
 					
 	def buttonBehaviour(self):
 		if not self.settingS and not self.settingP and not self.deletingNodes and len(self.compounds) > 1:
-			NodeCanvas.blocked = True
+			self.blocked = True
 			self.settingS = True
 			self.clickedS.clear()
 			self.clickedP.clear()
@@ -593,7 +620,7 @@ class NodeCanvas(FloatLayout):
 			self.parent.parent.contextText = 'Done'
 			self.parent.parent.contextColor = sourcesContextColor
 			self.parent.parent.myReactionHelper = ReactionHelper(contextColor = self.parent.parent.contextColor)
-			self.parent.parent.myReactionHelper.ids.MyHelperLabel.text = 'Click the nodes to select all the substrates for your reaction. Press DONE when finished.'
+			self.parent.parent.myReactionHelper.ids.MyHelperLabel.text = 'Click the nodes to select all the substrates for your reaction. Press DONE to start selecting products.'
 			self.parent.parent.add_widget(self.parent.parent.myReactionHelper)
 
 		elif self.settingP:
@@ -609,7 +636,7 @@ class NodeCanvas(FloatLayout):
 			for compound in self.compounds:
 				compound.contextColor = [0,0,0,1]
 			self.parent.parent.remove_widget(self.parent.parent.myReactionHelper)
-			NodeCanvas.blocked = False
+			self.blocked = False
 
 	def computeBezier(self,P0,P1,P2,arrowPos):
 		t = arrowPos - 0.1
@@ -824,9 +851,13 @@ class NodeCanvas(FloatLayout):
 				compound.updateReactions()
 				#for k in range(2):
 					#compound.pos[k] -= (touch.pos[k]-self.dFromClick[k])*0.1
+
+	def unblockCanvas(self,*args):
+		self.blocked = False
 				
 	def on_touch_up(self, touch):
-		if touch.button == 'left': 
+		if touch.button == 'left':
+
 			if self.firstTouch: #This removes the information helpers
 				self.firstTouch = False
 				self.remove_widget(self.children[0]) #WARNING, BLIND SELECTION TO REMOVE ADVICE WIDGET	
@@ -1082,6 +1113,7 @@ class GraphNode(Label):
 
 				###CREATE REACTION###
 				elif self.parent.settingS:
+					print('touched' + str(random.random()))
 					if self not in self.parent.clickedS:
 						self.parent.clickedS.append(self)
 
@@ -1426,8 +1458,7 @@ class InhibitionPropierties(Label):
 			return True
 		return False
 
-	def unblockCanvas(self,*args):
-		NodeCanvas.blocked = False
+
 	def on_touch_down(self, touch):	
 		if self.collide_point(*touch.pos):
 			if self.parent.deletingNodes:
@@ -1436,7 +1467,7 @@ class InhibitionPropierties(Label):
 				NodeCanvas.blocked = True
 				if touch.is_double_tap:
 					self.parent.setInhibitionData(self)
-				Clock.schedule_once(self.unblockCanvas, 0.1)
+				Clock.schedule_once(self.parent.unblockCanvas, 0.1)
 
 class NodePopup(Popup):
 
@@ -1469,29 +1500,18 @@ class ReactionHelper(BoxLayout):
 class ReactionPopup(Popup):
 
 	def on_open(self):
-		NodeCanvas.blocked = True
+		pass
 	def on_dismiss(self):
-		NodeCanvas.blocked = False   
+		pass 
 
 class ModifierPopup(Popup):
-
-	def on_open(self):
-		NodeCanvas.blocked = True
-	def on_dismiss(self):
-		NodeCanvas.blocked = False  	
+	pass	
 
 class ResultPopup(Popup):
-	def on_open(self):
-		NodeCanvas.blocked = True
-	def on_dismiss(self):
-		NodeCanvas.blocked = False		
+	pass	
 
 class InhibitionPopup(Popup):
 	nameI = StringProperty('')
-	def on_open(self):
-		NodeCanvas.blocked = True
-	def on_dismiss(self):
-		NodeCanvas.blocked = False	
 
 class OpenDataPopup(Popup):
 	pass

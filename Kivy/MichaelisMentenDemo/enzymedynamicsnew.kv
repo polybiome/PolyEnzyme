@@ -280,7 +280,7 @@
 		    	allow_stretch: False
 		    	keep_ratio: True
 	    		source: 'img/backgroundThing.png'	
-	    		color: root.contextColor 	
+	    		color: root.contextColor[0], root.contextColor[1], root.contextColor[2], 0.1
 
 		    Image:
 		    	#size: self.parent.width/2, self.parent.height/2
@@ -373,7 +373,7 @@
         	size: self.size
         	pos: self.pos
 	Label:
-		text: 'Great. Now, add another node and link them by clicking [color=D50000]"Create reactions"[/color]\nYou can click and drag the canvas to move all nodes, or zoom by scolling.'
+		text: 'Great. Now, add another node and link them by clicking [color=D50000]"Create reactions"[/color]\nYou can move individual nodes by clicking and draging,\nclick and drag the canvas to move all nodes, or zoom by scolling.'
 		color: 0,0,0,1
 		markup: True
 
