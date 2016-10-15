@@ -382,7 +382,7 @@
     # do_scale: False
     # do_rotation: False
 
-    text: self.name + '\n     '+ "{0:0.2f}".format(self.c) if not self.special == 'sourceSink' else self.name
+    text: self.name + '\n     '+ "{0:0.2f}".format(self.c) + '[mM]' if not self.special == 'sourceSink' else self.name
     color: self.contextColor #0.3, 0.5, 0.6, 0.8 #255/255, 196/255, 0/255, 1
 	size_hint: None,None
     #size: self.nodeSize

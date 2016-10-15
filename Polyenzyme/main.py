@@ -393,77 +393,103 @@ class NodeCanvas(FloatLayout):
 			self.reactionCycle(self.dt)
 
 	def reactionCycle(self, dt):
-		for reaction in self.reactions:
-			if True:#len(reaction.S + reaction.P) == 2:
-				if not reaction.iBoxes:#all(x == 'none' for x in [ibox.rType for ibox in reaction.iBoxes]):
-					try:
-						sMult = 1
-						hasSource = False
-						for S in reaction.S:
-							if S.special == 'sourceSink':
-								hasSource = True
+		tempS = []
+		tempP = []
+
+		def MichaelisMentel(x,reaction):
+			return (reaction.vMax*x)/(reaction.km + x)
+		def MichelisMentelInhibition(x,reaction,competitiveIhibition,unCompetitiveIhibition):
+			return (reaction.vMax*x)/(reaction.km*(1 + competitiveIhibition) + x*(1 + unCompetitiveIhibition))
+
+		for k, reaction in enumerate(self.reactions):
+			tempS.append([])
+			tempP.append([])
+			if not reaction.iBoxes:#all(x == 'none' for x in [ibox.rType for ibox in reaction.iBoxes]):
+				try:
+					sMult = 1
+					hasSource = False
+					for S in reaction.S:
+						if S.special == 'sourceSink':
+							hasSource = True
+						else:
+							sMult *= S.c
+					if sMult == 0:
+						v0 = 0
+					elif hasSource:
+						v0 = reaction.vMax
+					else:
+						v0Temp = MichaelisMentel(sMult,reaction)
+						v0 = MichaelisMentel(sMult + v0Temp*dt/2,reaction)
+
+					for S in reaction.S:
+						if not S.special == 'sourceSink':
+							if S.c >= dt*v0:
+								#S.c += dt*-v0
+								tempS[k].append(dt*-v0)
 							else:
-								sMult *= S.c
-						if sMult == 0:
-							v0 = 0
-						elif hasSource:
-							v0 = reaction.vMax
-						else:
-							v0 = (reaction.vMax*sMult)/(reaction.km + sMult)
+								S.c = 0 #Hard zero to allow the sMult==0 above
+								tempS[k].append(0)
 
-						for S in reaction.S:
-							if not S.special == 'sourceSink':
-								if S.c >= dt*v0:
-									S.c += dt*-v0
-								else:
-									S.c = 0 #Hard zero to allow the sMult==0 above
+					for P in reaction.P:
+						if not P.special == 'sourceSink':
+							#P.c += dt* v0	
+							tempP[k].append(dt* v0)
 
-						for P in reaction.P:
-							if not P.special == 'sourceSink':
-								P.c += dt* v0	
-
-					except ZeroDivisionError as e:
-						print('WARNING: ' + str(e))
-				else:
-					competitiveIhibition = 0
-					unCompetitiveIhibition = 0
-					for ibox in reaction.iBoxes: #Assumes that inhibitions add!
-						if ibox.rType == 'c' or ibox.rType == 'nc':
-							competitiveIhibition += ibox.I.c/ibox.ki
-						if ibox.rType == 'uc' or ibox.rType == 'nc':
-							unCompetitiveIhibition += ibox.I.c/ibox.ki
-					try:
-						sMult = 1
-						hasSource = False
-						for S in reaction.S:
-							if S.special == 'sourceSink':
-								hasSource = True
-							else:	
-								sMult *= S.c
-
-						if sMult == 0:
-							v0 = 0
-						elif hasSource:
-							v0 = reaction.vMax/(1 + unCompetitiveIhibition)
-						else:
-							v0 = (reaction.vMax*sMult)/(reaction.km*(1 + competitiveIhibition) + sMult*(1 + unCompetitiveIhibition))
-
-						for S in reaction.S:
-							if not S.special == 'sourceSink':
-								if S.c >= dt*v0:
-									S.c += dt*-v0
-								else:
-									S.c = 0
-
-						for P in reaction.P:
-							if not P.special == 'sourceSink':
-								P.c += dt* v0
-
-					except ZeroDivisionError as e:
-						print('WARNING: ' + str(e))
+				except ZeroDivisionError as e:
+					print('WARNING: ' + str(e))
 			else:
+				competitiveIhibition = 0
+				unCompetitiveIhibition = 0
+				for ibox in reaction.iBoxes: #Assumes that inhibitions add!
+					if ibox.rType == 'c' or ibox.rType == 'nc':
+						competitiveIhibition += ibox.I.c/ibox.ki
+					if ibox.rType == 'uc' or ibox.rType == 'nc':
+						unCompetitiveIhibition += ibox.I.c/ibox.ki
+				try:
+					sMult = 1
+					hasSource = False
+					for S in reaction.S:
+						if S.special == 'sourceSink':
+							hasSource = True
+						else:	
+							sMult *= S.c
 
-				print('ERROR: REACTION NOT SUPPORTED YET')
+					if sMult == 0:
+						v0 = 0
+					elif hasSource:
+						v0 = reaction.vMax/(1 + unCompetitiveIhibition)
+					else:
+						v0Temp = MichelisMentelInhibition(sMult,reaction,competitiveIhibition,unCompetitiveIhibition)
+						v0 = MichelisMentelInhibition(sMult + v0Temp*dt/2,reaction,competitiveIhibition,unCompetitiveIhibition)
+						#v0 = (reaction.vMax*sMult)/(reaction.km*(1 + competitiveIhibition) + sMult*(1 + unCompetitiveIhibition))
+
+					for S in reaction.S:
+						if not S.special == 'sourceSink':
+							if S.c >= dt*v0:
+								tempS[k].append(dt*-v0)
+							else:
+								S.c = 0 #Hard zero to allow the sMult==0 above
+								tempS[k].append(0)
+
+					for P in reaction.P:
+						if not P.special == 'sourceSink':
+							tempP[k].append(dt* v0)
+
+				except ZeroDivisionError as e:
+					print('WARNING: ' + str(e))
+
+		for k, reaction in enumerate(self.reactions):
+			i = 0
+			for S in reaction.S:
+				if not S.special == 'sourceSink':
+					S.c += tempS[k][i]
+					i += 1
+			i = 0
+			for P in reaction.P:
+				if not P.special == 'sourceSink':
+					P.c += tempP[k][i]
+					i += 1
+
 
 	def solveSystem(self):
 
@@ -497,7 +523,8 @@ class NodeCanvas(FloatLayout):
 				plt.plot(t, value[:-1], label=obj.name, linewidth=3)
 		
 		plt.legend(loc='best')
-		plt.xlabel('t')
+		plt.xlabel('t[s]')
+		plt.ylabel('Concentration[mM]')
 		plt.grid()
 		#plt.show()
 		plt.savefig('img/odeResult.png')
@@ -649,7 +676,6 @@ class NodeCanvas(FloatLayout):
 
 	def createReaction(self):
 
-		NodeCanvas.blocked = False
 		# for element in self.clickedS + self.clickedP:
 		# 	element.canvas.remove(element.canvas.children[-1]) #Ellipsis(deprecated)
 
@@ -721,9 +747,9 @@ class NodeCanvas(FloatLayout):
 	def changeText(self,reaction):
 		if True:#len(reaction.S + reaction.P) == 2:
 			if reaction.enzyme == 'default':
-				reaction.boxText = 'km ' + "{0:0.1f}".format(reaction.km) + '\nVmax ' + "{0:0.1f}".format(reaction.vMax)
+				reaction.boxText = 'km ' + "{0:0.1f}".format(reaction.km) + '[mM]\nVmax ' + "{0:0.1f}".format(reaction.vMax)
 			else:
-				reaction.boxText = str(reaction.enzyme) + '\nkm ' + "{0:0.1f}".format(reaction.km) + '\nVmax ' + "{0:0.1f}".format(reaction.vMax)
+				reaction.boxText = str(reaction.enzyme) + '\nkm ' + "{0:0.1f}".format(reaction.km) + '[mM]\nVmax ' + "{0:0.1f}".format(reaction.vMax)+'[mM/s]'
 		else:
 			print('WARNING: REACTION TYPE NOT DEFINED')
 
@@ -753,8 +779,8 @@ class NodeCanvas(FloatLayout):
 				self.changeText(reaction)
 
 			inputEnzyme = TextInput(hint_text='Enzyme',multiline=False)
-			inputKm = TextInput(hint_text='KM',multiline=False, input_filter = 'float')
-			inputVmax = TextInput(hint_text='Vmax ', multiline=False, input_filter = 'float')
+			inputKm = TextInput(hint_text='KM [mM]',multiline=False, input_filter = 'float')
+			inputVmax = TextInput(hint_text='Vmax [mM/s] ', multiline=False, input_filter = 'float')
 
 			inputEnzyme.bind(text=on_inputEnzyme)
 			inputKm.bind(text=on_inputKm)
@@ -783,7 +809,7 @@ class NodeCanvas(FloatLayout):
 		elif iBox.rType == 'nc':
 			text = 'Non-competitive(mixed)'
 
-		iBox.iBoxText = 'ki ' + "{0:0.1f}".format(iBox.ki) + '\n' + text
+		iBox.iBoxText = 'ki ' + "{0:0.1f}".format(iBox.ki) + '[mM]\n' + text
 
 	def setInhibitionData(self,iBox):
 		box = BoxLayout()
@@ -810,7 +836,7 @@ class NodeCanvas(FloatLayout):
 
 		spinner = Spinner(text='Select reaction type',values=options, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
 		
-		inputKi = TextInput(hint_text='Ki',multiline=False, input_filter = 'float')
+		inputKi = TextInput(hint_text='Ki[mM]',multiline=False, input_filter = 'float')
 
 		inputKi.bind(text=partial(on_inputKi,iBox))
 
@@ -946,7 +972,7 @@ class NodeCanvas(FloatLayout):
 
 		box = BoxLayout()
 		inputName = TextInput(hint_text='Name',multiline=False)
-		inputC = TextInput(hint_text='Concentration', multiline=False, input_filter = 'float')
+		inputC = TextInput(hint_text='Concentration[mM]', multiline=False, input_filter = 'float')
 
 		inputName.bind(text=on_textName)
 		inputC.bind(text=on_textC)
@@ -1341,8 +1367,6 @@ class Reaction(Label):
 
 				if self.parent.settingP:
 
-					NodeCanvas.blocked = False
-
 					if self.parent.clickedS:
 
 						for I in reversed(self.parent.clickedS):
@@ -1458,13 +1482,11 @@ class InhibitionPropierties(Label):
 			return True
 		return False
 
-
 	def on_touch_down(self, touch):	
 		if self.collide_point(*touch.pos):
 			if self.parent.deletingNodes:
 				self.parent.removeInhibition(self.reaction,self)
 			else:
-				NodeCanvas.blocked = True
 				if touch.is_double_tap:
 					self.parent.setInhibitionData(self)
 				Clock.schedule_once(self.parent.unblockCanvas, 0.1)
@@ -1472,7 +1494,7 @@ class InhibitionPropierties(Label):
 class NodePopup(Popup):
 
 	def on_open(self):
-		NodeCanvas.blocked = True
+		pass
 	def on_dismiss(self):
 		#WTF, THERE HAS TO BE A CLEANER WAY SOMEHOW
 		if self.parent.children[1].children[0].ids.myNodeCanvas.secondInfo:
@@ -1480,15 +1502,13 @@ class NodePopup(Popup):
 			self.parent.children[1].children[0].ids.myNodeCanvas.add_widget(myInitialInstructions2) 
 			self.parent.children[1].children[0].ids.myNodeCanvas.firstTouch = True
 			self.parent.children[1].children[0].ids.myNodeCanvas.secondInfo = False
-		NodeCanvas.blocked = False	
 
 class ReactionHelper(BoxLayout):
-	contextColor = ListProperty()		
+	contextColor = ListProperty()
 
 	def cancelButton(self):
 		self.parent.ids.myNodeCanvas.settingS = False
 		self.parent.ids.myNodeCanvas.settingP = False
-		NodeCanvas.blocked = False
 		# for element in self.parent.ids.myNodeCanvas.clickedS + self.parent.ids.myNodeCanvas.clickedP:
 		# 	element.canvas.remove(element.canvas.children[-1]) #ellipsis(deprecated)
 		self.parent.contextText = 'Create\nReaction'
