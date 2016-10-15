@@ -1,0 +1,107 @@
+<MainCanvas>:
+	orientation: 'vertical'
+	canvas:
+	    Color:
+            #rgba: 0.9, 0.9, 0.9,1
+            rgba: 75/255, 89/255, 118/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    NodeCanvas:
+    	id: myNodeCanvas
+    	size_hint: 1,.7
+		canvas:
+		    Color:
+	            rgba: 0, 0, 0,0.5
+	        Rectangle:
+	            pos: self.pos
+	            size: self.size
+	OptionsCanvas:
+		padding: 50,30,50,50
+		spacing: 10
+		size_hint: 1,.3
+		canvas:
+		    Color:
+	            rgba: 0.7, 0.7, 0.7, 1
+	        Rectangle:
+	            pos: self.pos
+	            size: self.size	
+
+	    OptionsButton:
+	    	size_hint: .2, 1
+	    	text: 'Delete mode: ' + ('ON' if myNodeCanvas.deletingNodes else 'OFF')
+	    	on_release: myNodeCanvas.deletingNodes = not myNodeCanvas.deletingNodes
+			background_color: (1,0,0,1) if myNodeCanvas.deletingNodes else (0,1,0,0.2)
+
+	    OptionsButton:
+	    	background_color: 0,1,0,0.2
+	    	size_hint: .2, 1
+	    	text: 'Erase everything'
+	    	on_release: if not myNodeCanvas.linkingReaction: myNodeCanvas.removeAllNodes() #quick fix for begining reaction and then ereasing everything
+
+	    OptionsButton:
+	    	background_color: 1,1,0,0.2
+	    	size_hint: .2, 1
+	    	text: 'Settings'
+	    	on_release: app.open_settings()
+
+
+	    OptionsButton:
+	    	background_color: 0,0,1,0.4
+	    	size_hint: .4, 1
+	    	text: 'Solve'
+	    	on_release: if myNodeCanvas.compounds: myNodeCanvas.solveSystem() #Disallows solving when there are no nodes
+	    	
+
+   #      GraphNode:
+   #      	id: myNode
+   #      	text: 'A'
+			# color: 0, 0, 0, 1
+
+<GraphNode>:
+    # do_scale: False
+    # do_rotation: False
+
+    text: self.name + '\n     '+ str(self.c)
+    color: 0.3, 0.5, 0.6, 0.8
+	size_hint: None,None
+	size: self.size
+    size: 100, 100
+    font_size: 15
+    bold: True
+    canvas.before:
+        Color:
+        	rgba: .9,.9,.9,1
+
+        Ellipse:
+        	size: self.size
+        	pos: self.pos
+        	#source: 'img/node.png'
+
+<NodePopup>:
+	size_hint: .9,None
+	title: 'PLEASE WRITE THE COMPOUND NAME AND CONCENTRATION'
+
+<ReactionPopup>:
+	size_hint: .9,None
+	title: 'PLEASE ADD INFO'
+
+<ResultPopup>:
+	size_hint: .9,.9
+	title: 'SIMULATION RESULTS'
+
+<Reaction>:
+	text: self.boxText
+	color: 0.9,0.9,0.2,0.7
+	bold: True
+	size_hint: None,None
+	size: 50,20
+	pos: self.boxPosition
+
+
+
+
+
+
+
