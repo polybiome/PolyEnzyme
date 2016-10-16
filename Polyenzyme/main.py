@@ -103,10 +103,8 @@ class NodeCanvas(FloatLayout):
 	scrollPos = NumericProperty(0)
 
 
-	#WARNING: DOES NOT UPDATE AUTOMATICALLY BASED ON SETTING'S SAVED VALUE: TO DO
 	tmax = NumericProperty(2) 
 	dt = NumericProperty(0.01)
-	resolution = NumericProperty(0.01)
 
 	def __init__(self, **kwargs):
 		super(NodeCanvas, self).__init__(**kwargs)
@@ -501,9 +499,9 @@ class NodeCanvas(FloatLayout):
 
 		print(compounds)
 
-		def integrateODES(compounds,tmax,dt,resolution):
+		def integrateODES(compounds,tmax,dt):
 
-			for iterator in range(int(tmax/resolution)):
+			for iterator in range(int(tmax/dt)):
 
 				self.reactionCycle(dt)
 				
@@ -512,9 +510,9 @@ class NodeCanvas(FloatLayout):
 
 			return compounds
 
-		t = np.arange(0,self.tmax,self.resolution)
+		t = np.arange(0,self.tmax,self.dt)
 
-		sol = integrateODES(compounds,self.tmax,self.dt,self.resolution)
+		sol = integrateODES(compounds,self.tmax,self.dt)
 
 		for obj, value in sol.items():
 			if not obj.special == 'sourceSink':
@@ -1572,7 +1570,7 @@ class EnzymeDynamicsNewApp(App):
 	settings_cls = mySettings
 
 	def applyConfig(self):
-		for key in ['tmax','dt','resolution']:
+		for key in ['tmax','dt']:
 			value = self.config.get('ODEsettings',key)
 			setattr(self.root.children[0].ids.myNodeCanvas,key,float(value))
 
@@ -1585,12 +1583,6 @@ class EnzymeDynamicsNewApp(App):
 		config.setdefaults('ODEsettings',{
 			'tmax': 2,
 			'dt': 0.01,
-			'resolution': 0.01
-			})
-		config.setdefaults('Other',{
-			'optionsexample': 'option2',
-			'stringexample': 'some_string',
-			'pathexample': '/some/path'
 			})
 	def build_settings(self,settings):
 		#with open("settings.json", "r") as settings_json:
