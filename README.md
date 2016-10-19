@@ -1,6 +1,8 @@
-<style>
-	p {font-family: Lucida Console; }
-</style>
+QUICK START
+++++++++++
+
+To run the code you will need python 3.4 + kivy 1.9.1 + numpy + matplotlib. Alternativelly if you're on windows you can just download and run our executable.
+
 
 <header style=" margin: 0 30px;color:#5B8DDA">
 **POLYENZYME - DOCUMENTATION**
