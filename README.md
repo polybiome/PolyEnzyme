@@ -1,4 +1,4 @@
-** QUICK START **
+<h2>QUICK START</h2>
 
 To run the code you will need python 3.4 + kivy 1.9.1 + numpy + matplotlib. Alternativelly if you're on windows you can just download and run our executable by downloading PolyBiome.rar
 
