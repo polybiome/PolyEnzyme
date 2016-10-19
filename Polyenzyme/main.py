@@ -39,10 +39,8 @@ import requests
 
 from functools import partial
 
-#Constants
-#Window.fullscreen = 1#'auto'#False#'auto'
-#Window.window_state = 'maximized'
-Config.set('graphics', 'window_state', 'maximized')
+Window.maximize()
+
 Config.set('kivy', 'exit_on_escape', '0')
 Config.set("input", "mouse", "mouse,disable_multitouch")
 
@@ -280,9 +278,11 @@ class NodeCanvas(FloatLayout):
 				self.loadData(data)
 				myPopup.dismiss()
 
-		spinnerCloud = Spinner(text='Select predefined:',values=optionsCloud, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
+		
+		
+		spinnerCloud = Spinner(text='Examples:',values=optionsCloud, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
 
-		spinnerLocal = Spinner(text='Select custom:',values=optionsLocal, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
+		spinnerLocal = Spinner(text='Saved:',values=optionsLocal, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
 
 		spinnerCloud.bind(text=on_selectCloud)
 		spinnerLocal.bind(text=on_selectLocal)
@@ -776,9 +776,13 @@ class NodeCanvas(FloatLayout):
 				reaction.enzyme = value
 				self.changeText(reaction)
 
-			inputEnzyme = TextInput(hint_text='Enzyme',multiline=False)
-			inputKm = TextInput(hint_text='KM [mM]',multiline=False, input_filter = 'float')
-			inputVmax = TextInput(hint_text='Vmax [mM/s] ', multiline=False, input_filter = 'float')
+			
+			text = '' if reaction.enzyme == "default" else reaction.enzyme
+			inputEnzyme = TextInput(hint_text='Enzyme', text = text,multiline=False)
+			text = '' if reaction.km == 0.5 else str(reaction.km)
+			inputKm = TextInput(hint_text='KM [mM]', text = text,multiline=False, input_filter = 'float')
+			text = '' if reaction.vMax == 1.5 else str(reaction.vMax)
+			inputVmax = TextInput(hint_text='Vmax [mM/s] ', text = text, multiline=False, input_filter = 'float')
 
 			inputEnzyme.bind(text=on_inputEnzyme)
 			inputKm.bind(text=on_inputKm)
@@ -834,7 +838,8 @@ class NodeCanvas(FloatLayout):
 
 		spinner = Spinner(text='Select reaction type',values=options, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
 		
-		inputKi = TextInput(hint_text='Ki[mM]',multiline=False, input_filter = 'float')
+		text = '' if iBox.ki == 1 else str(iBox.ki)
+		inputKi = TextInput(hint_text='Ki[mM]',text = text,multiline=False, input_filter = 'float')
 
 		inputKi.bind(text=partial(on_inputKi,iBox))
 
@@ -969,8 +974,10 @@ class NodeCanvas(FloatLayout):
 		spinner = Spinner(text='Select special propierties',values=options, background_color = (255,255,255,1), font_size = 12, color = (0,0,0,1))
 
 		box = BoxLayout()
-		inputName = TextInput(hint_text='Name',multiline=False)
-		inputC = TextInput(hint_text='Concentration[mM]', multiline=False, input_filter = 'float')
+		text = '' if compound.name == "Default" else compound.name
+		inputName = TextInput(hint_text='Name',text = text,multiline=False)
+		text = '' if compound.c == 1 else str(compound.c)
+		inputC = TextInput(hint_text='Concentration[mM]',text = text, multiline=False, input_filter = 'float')
 
 		inputName.bind(text=on_textName)
 		inputC.bind(text=on_textC)
